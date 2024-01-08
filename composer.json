@@ -3,6 +3,8 @@
       "psr-4": {
         "Namespace\\": "src/"
       }
+    },
+    "require": {
+        "nikic/fast-route": "^1.3"
     }
-  }
-  
+}
