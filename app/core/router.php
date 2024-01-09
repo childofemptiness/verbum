@@ -32,7 +32,8 @@ class Router {
                 // Вызов соответствующего контроллера и метода
                 list($controller, $method) = explode('@', $handler, 2);
 
-                $controller = ucfirst($controller) . '_Controller';
+                $controller = ucfirst($controller) . 'Controller';
+
                 if (!class_exists($controller)){
                     $controller = DEFAULT_CONTROLLER;
                     $method = DEFAULT_METHOD;

@@ -15,7 +15,7 @@ define ("MEDIA", SITE_ROOT . "/" . "public");
 define ("HTML", "public" . DS . "html");
 
 # Default states
-define ("DEFAULT_CONTROLLER", "Index_Controller");
+define ("DEFAULT_CONTROLLER", "MainController");
 define ("DEFAULT_METHOD", "home");
 define ("NOT_FOUND", "not_found");
 define("AUTHORIZE", "loginpage");
