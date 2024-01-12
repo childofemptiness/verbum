@@ -1,16 +1,18 @@
 <?php
+namespace App\Views;
 class View {
 
   private $localizations = array();
-  
+  private $controller = '';
+
   # Initialize keywords dictionary
-  public function __construct(){
-    $this->build_locales();    
+  public function __construct($controller = ''){
+    $this->build_locales();
+    $this->controller = lcfirst($controller); 
   }
   
   # Replace keywords
-  public function replace_localizations($html) {
-    
+   public function replace_localizations($html) {
     foreach ($this->localizations as $key => $value) {
       $html = str_replace("{\$" . $key . "\$}", $value, $html);
     }
@@ -106,9 +108,8 @@ class View {
   protected function get_head() {
     $html = "";
     $html .= " <head>\n";
-    
-    if (file_exists(HTML . DS . "index". DS . "temp" . DS . "meta.html")) {
-      $html .= file_get_contents(HTML . DS . "index" . DS . "temp" . DS . "meta.html");
+    if (file_exists(HTML . DS . $this->controller. DS . "temp" . DS . "meta.html")) {
+      $html .= file_get_contents(HTML . DS . $this->controller . DS . "temp" . DS . "meta.html");
       $html .= "\n";
     }
     
@@ -122,8 +123,8 @@ class View {
     $html .= "  <title>" . $title . "</title>";
     $html .= "\n";
     
-    if (file_exists(HTML . DS . "index" . DS . "temp" . DS . "resources.html")) {
-      $html .= file_get_contents(HTML . DS . "index" . DS . "temp" . DS . "resources.html");
+    if (file_exists(HTML . DS . $this->controller . DS . "temp" . DS . "resources.html")) {
+      $html .= file_get_contents(HTML . DS . $this->controller . DS . "temp" . DS . "resources.html");
       $html .= "\n";
     }
     
@@ -146,8 +147,8 @@ class View {
   protected function get_header() {
     $html = "";
     
-    if (file_exists(HTML . DS . "index" . DS . "temp" . DS . "header.html")) {
-      $html .= file_get_contents(HTML . DS . "index" . DS . "temp" . DS . "header.html");
+    if (file_exists(HTML . DS . $this->controller . DS . "temp" . DS . "header.html")) {
+      $html .= file_get_contents(HTML . DS . $this->controller . DS . "temp" . DS . "header.html");
       $html .= "\n";
     }
     
@@ -158,8 +159,8 @@ class View {
   protected function get_bodycont($page_name) {
     $html = "";
     
-    if (file_exists(HTML . DS . "index" . DS . $page_name . ".html")) {
-      $html .= file_get_contents(HTML . DS . "index" . DS . $page_name . ".html");
+    if (file_exists(HTML . DS . $this->controller . DS . $page_name . ".html")) {
+      $html .= file_get_contents(HTML . DS . $this->controller . DS . $page_name . ".html");
       $html .= "\n";
     }
     
@@ -170,8 +171,8 @@ class View {
   protected function get_footer() {
     $html = "";
     
-    if (file_exists(HTML . DS . "index" . DS . "temp" . DS . "footer.html")) {
-      $html .= file_get_contents(HTML . DS . "index" . DS . "temp" . DS . "footer.html");
+    if (file_exists(HTML . DS . $this->controller . DS . "temp" . DS . "footer.html")) {
+      $html .= file_get_contents(HTML . DS . $this->controller . DS . "temp" . DS . "footer.html");
       $html .= "\n";
     }
     
@@ -182,8 +183,8 @@ class View {
   protected function get_scripts() {
     $html = "";
     
-    if (file_exists(HTML . DS . "index" . DS . "temp" . DS . "scripts.html")) {
-      $html .= file_get_contents(HTML . DS . "index" . DS . "temp" . DS . "scripts.html");
+    if (file_exists(HTML . DS . $this->controller . DS . "temp" . DS . "scripts.html")) {
+      $html .= file_get_contents(HTML . DS . $this->controller . DS . "temp" . DS . "scripts.html");
       $html .= "\n";
     }
     

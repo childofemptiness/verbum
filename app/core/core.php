@@ -1,18 +1,17 @@
 <?php
+# Autoload
+require_once '../verbum/vendor/autoload.php';
 
-# Autoloader
-spl_autoload_register(function ($class_name) {
-    if (file_exists(ROOT . DS . "core" . DS . strtolower($class_name) . ".php")) {
-      require_once (ROOT . DS . "core" . DS . strtolower($class_name) . ".php");
-    }
-});
+
+# Load config
+require_once(ROOT . DS . "config" . DS . "config.php");
+// require_once(ROOT . DS. "core" . DS . "helper_functions.php");
+
+
+use App\Core\Router;
+
 // Создаем объект класса Router
-$router = new Router();
-
-// Получаем HTTP метод и URI из запроса (например, из $_SERVER['REQUEST_METHOD'] и $_SERVER['REQUEST_URI'])
-
-$httpMethod = $_SERVER['REQUEST_METHOD'];
-$uri = $_SERVER['REQUEST_URI'];
+$router = new Router($httpMethod, $uri);
 
 // Вызываем метод dispatch для обработки запроса
-$router->dispatch($httpMethod, $uri);
+$router->dispatch();

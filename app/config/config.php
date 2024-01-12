@@ -3,10 +3,10 @@
 define ("DBNAME", "verbum_db");
 define ("DBUSER", "root");
 define ("DBPASS", "");
-define ("DBHOST", "");
+define ("DBHOST", "localhost");
 
 # PATH to app and app name
-define ("PATH", "");
+define ("PATH", "verbum");
 define ("WEB_TITLE", "Verbum");
 
 # PATH to media files and site root constants

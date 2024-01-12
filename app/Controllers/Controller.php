@@ -1,28 +1,32 @@
 <?php
 
 # Implement sanitize methods first
+namespace App\Controllers;
+use App\Models;
+use App\Views\View;
+
+
 class Controller extends Application {
   
   protected $controller;
   protected $method;
   protected $model;
   protected $view;
-
   protected $model_name;
   
   public function __construct($controller, $method) {
     parent::__construct();
     
     $this->method = $method;
-    $this->controller = $controller;  
-    $this->model_name = $this->controller."_Model";  
-    $this->view = new View();
+    $this->controller = $controller = substr($controller, 0, -10);
+    $this->model_name = 'App\\Models\\' . $this->controller."Model"; 
+    $this->view = new View($controller); 
   }
   
   # Load and instantiate model specific for this controller
   protected function load_model() {
     if (class_exists($this->model_name)) {
-      $this->model[$this->model_name] = new $this->model_name();
+      $this->model[$this->model_name] = new $this->model_name($this->view);
     }
     else {
       return false;
@@ -40,13 +44,10 @@ class Controller extends Application {
   }
 
   
-  # Return view instance
-  protected function get_view() {
-    return $this->view;
-  }
-
-  
-  
+  // # Return view instance
+  // protected function get_view() {
+  //   return $this->view;
+  // }
 }
 
 ?>

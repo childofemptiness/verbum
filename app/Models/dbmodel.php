@@ -1,5 +1,11 @@
 <?php
+namespace App\Models;
+use App\Core\HelperFunctions;
+use PDO;
+use PDOException;
+
 if (session_id() == '') session_start();
+
 class DbModel {
 
   protected $rows = array();  
@@ -8,12 +14,12 @@ class DbModel {
   private $pdo;
   private $statement;
 
-  public function __construct() {
+  protected function __construct() {
     try {
       $options = [
-        \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
-        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-        \PDO::ATTR_EMULATE_PREPARES   => false,
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
     ];
       $this->pdo = new PDO('mysql:host='.DBHOST.';dbname='.DBNAME, DBUSER, DBPASS, $options);
       $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -60,7 +66,7 @@ class DbModel {
     }
 }
 
-  public function set_multyquery($sql) {
+  protected function set_multyquery($sql) {
     try {
       $this->pdo->exec($sql);
     } catch(PDOException $e) {
@@ -69,20 +75,20 @@ class DbModel {
     }
   }
 
-  public function beginTransaction(){
+  protected function beginTransaction(){
     $this->pdo->beginTransaction();
   }
 
-  public function commitTransaction(){
+  protected function commitTransaction(){
     $this->pdo->commit();
   }
 
-  public function rollBack(){
+  protected function rollBack(){
     $this->pdo->rollBack();
   }
 
   # Submit SELECT SQL query
-  public function get_query($sql, $params = []) {
+  protected function get_query($sql, $params = []) {
     try {
         $statement = $this->pdo->prepare($sql);
         foreach ($params as $key => &$value) {  // Обратите внимание на ссылку & перед $value
@@ -106,7 +112,7 @@ class DbModel {
     }
 }
   # Submit SELECT SQL query - get row count if matches found
-  public function get_rows($sql, $params=[]) {
+  protected function get_rows($sql, $params=[]) {
     try {
       $statement = $this->pdo->prepare($sql);
 
@@ -131,12 +137,12 @@ class DbModel {
 }
   
 
-  public function getUserID()
+  protected function getUserID()
   {
-    send_json(['id' => $_SESSION['id']]);
+     HelperFunctions::send_json(['id' => $_SESSION['id']]);
 }
 
-  public function lastInsertId()
+  protected function lastInsertId()
   {
     return $this->pdo->lastInsertId();
 }

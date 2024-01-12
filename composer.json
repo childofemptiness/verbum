@@ -1,7 +1,10 @@
 {
     "autoload": {
       "psr-4": {
-        "Namespace\\": "src/"
+        "App\\Controllers\\": "app/Controllers/",
+        "App\\Models\\": "app/Models/",
+        "App\\Views\\": "app/Views/",
+        "App\\Core\\": "app/core/"
       }
     },
     "require": {
