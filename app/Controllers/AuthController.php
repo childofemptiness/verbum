@@ -55,7 +55,7 @@ class AuthController extends Controller{
                 $response['message'] = 'Письмо с подтверждением отправлено на почту';
             }
         }
-    $this->helper::send_json($response);
+    $this->helper->send_json($response);
     }
 
     public function activation($args){

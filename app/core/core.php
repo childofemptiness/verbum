@@ -1,6 +1,6 @@
 <?php
 # Autoload
-require_once '../verbum/vendor/autoload.php';
+require_once('./vendor/autoload.php');
 
 
 # Load config

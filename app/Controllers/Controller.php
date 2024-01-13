@@ -16,9 +16,8 @@ class Controller extends Application {
   
   public function __construct($controller, $method) {
     parent::__construct();
-    
-    $this->method = $method;
-    $this->controller = $controller = substr($controller, 0, -10);
+    $this->controller = $controller;
+    $this->method = $method;   
     $this->model_name = 'App\\Models\\' . $this->controller."Model"; 
     $this->view = new View($controller); 
   }

@@ -137,7 +137,7 @@ class AuthModel extends DbModel{
      // Проверяем, существует ли пользователь в бд
      function isUserExists($requestData)
      {
-         $email = $requestData['email'];
+         $email = $requestData['username'];
          $query = 'SELECT * FROM users WHERE username = :username';
          $result = $this->get_query($query, ['email'=> $email]);
          return $result;
@@ -146,10 +146,10 @@ class AuthModel extends DbModel{
     // Проверка, подтвердил ли пользователь почту
     function isUserVerified($requestData)
     {
-        $email = $requestData["email"];
-        $query = 'SELECT right_level FROM users WHERE email = :email';
-        $right_level = $this->get_query($query, ['email'=> $email]);
-        return $right_level;
+        $username = $requestData["username"];
+        $query = 'SELECT rights FROM users WHERE username = :username';
+        $rights = $this->get_query($query, ['username'=> $username]);
+        return $rights;
     }
    
     // Подтвердить пользователя в БД

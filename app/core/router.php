@@ -18,18 +18,18 @@ class Router {
         $this->uri = $uri;
         $url_array = explode('/', $this->uri);
         $this->controller_name = $url_array[1];
-        $this->method_name = $url_array[2];
+        $this->method_name = empty($url_array[2]) ? '' : $url_array[2];
         $this->dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r) {
-            $r->addRoute('GET', '/users', 'get_all_users_handler');
-            // {id} must be a number (\d+)
-            $r->addRoute('GET', '/user/{id:\d+}', 'get_user_handler');
-            // The /{title} suffix is optional
-            $r->addRoute('GET', '/articles/{id:\d+}[/{title}]', 'get_article_handler');
+            // $r->addRoute('GET', '/users', 'get_all_users_handler');
+            // // {id} must be a number (\d+)
+            // $r->addRoute('GET', '/user/{id:\d+}', 'get_user_handler');
+            // // The /{title} suffix is optional
+            // $r->addRoute('GET', '/articles/{id:\d+}[/{title}]', 'get_article_handler');
 
             if (strpos($this->uri, 'activation') !== false) {
                 $r->addRoute('GET', '/auth/activation/{token}', 'AuthController@activation');  // ИЗБАВИТЬСЯ ОТ КОСТЫЛЯ!!!
             } else {
-            $r->addRoute($this->httpMethod, $this->uri, ucfirst($this->controller_name) . 'Controller' . '@' . $this->method_name);
+            $r->addRoute($this->httpMethod, $this->uri, ucfirst($this->controller_name)  . '@' . $this->method_name);
             }
         });
     }
@@ -49,16 +49,18 @@ class Router {
                 $vars = $routeInfo[2];
                 // Вызов соответствующего контроллера и метода
                 list($controller, $method) = explode('@', $handler, 2); 
+
                 $controller_class = "App\\Controllers\\" . ucfirst($this->controller_name) . "Controller";
 
-                if (!class_exists($controller_class)){
-
+                if (!class_exists($controller_class)  || empty($this->controller_name)){
                     $controller = DEFAULT_CONTROLLER;
                     $method = DEFAULT_METHOD;
-                }  else if (!method_exists($controller_class, $method)){
+                    $controller_class = "App\\Controllers\\" . $controller . "Controller";
+                }   else if (!method_exists($controller_class, $method)){
                     $method = NOT_FOUND;
                 }
-                
+
+
                 call_user_func_array([new $controller_class($controller, $method), $method], $vars);
 
                 break;

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 use App\Core\HelperFunctions;
+use Ratchet\Server\IoServer;
 
 class MainController extends Controller{
 

@@ -12,4 +12,5 @@ if (session_id() == '')session_start();
 
 require_once(ROOT . DS . "core" . DS . "core.php");
 
+
 ?>
