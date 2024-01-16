@@ -1,0 +1,51 @@
+<body>
+    <div class="container">
+        <header class="header">
+            <form class="search-form">
+                <input type="text" id="user-search" class="search-input" placeholder="Поиск пользователей...">
+                <button type="submit" class="invite-button">Отправить приглашение</button>
+            </form>
+            <button class="invitation-list-button">Приглашения</button>
+            <div class="dropdown-invitations-content">
+                <template id="invitations-template">
+                    <div class="invitation">
+                      <span class="invitation-name"></span>
+                      <button class="accept-btn">Принять</button>
+                      <button class="decline-btn">Отклонить</button>
+                    </div>
+                  </template>
+                  
+            </div>
+            <button class="friends-list-button">Список друзей</button>
+        </header>
+        <section class="friends-list hidden">
+            <!-- Здесь будет отображаться список друзей -->
+        </section>
+    </div>
+    
+    <aside class="sidebar">
+        <header class="sidebar-header">
+                <div class="dropdown">
+                    <button class="dropbtn">☰</button> <!-- Используются три горизонтальные полосы -->
+                    <div class="dropdown-menu-content">
+                        <a href="/main/home">Главная</a>
+                        <a href="#">Профиль</a>
+                        <a href="/friends/home">Друзья</a>
+                        <a href="#">Уведомления</a>
+                        <a href="#">Безопасность</a>
+                        <a href="/auth/logout">Выход</a>
+                    </div>
+                </div>
+                <!-- остальная часть боковой колонки -->
+                <div class="user-info">
+                    <i id="user-icon" class='bx bx-user-circle'></i>
+                    <h3 class="user-name"></h3>
+                </div>
+                <h3 class="user-friend-id"></h3>
+        </header>
+        <!-- Информация о пользователе -->
+        
+        <!-- Поле ввода для добавления друга -->
+        
+    </aside>
+</body>

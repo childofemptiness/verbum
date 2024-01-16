@@ -19,13 +19,14 @@ class WebSocketHandler implements MessageComponentInterface{
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
+        $data = json_decode($msg);
         $numRecv = count($this->clients) - 1;
         echo sprintf('Connection %d sending message "$s" to %d other connections%s' . "\n", $from->resourceId, $msg, $numRecv, $numRecv == 1 ? '' : 's');
 
         foreach($this->clients as $client) {
             if ($from !== $client) {
                 // The sender is not the receiver, send to each client connected
-                $client->send($msg);
+                $client->send($data);
             }
         }
     }

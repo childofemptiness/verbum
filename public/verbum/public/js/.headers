@@ -1,0 +1,20 @@
+[
+  {
+    "applyTo": "server",
+    "headers": [
+      {
+        "name": "content-type",
+        "value": "application/javasciprt"
+      }
+    ]
+  },
+  {
+    "applyTo": "friends.js",
+    "headers": [
+      {
+        "name": "content-type",
+        "value": "module"
+      }
+    ]
+  }
+]

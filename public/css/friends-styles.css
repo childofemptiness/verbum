@@ -1,0 +1,121 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    flex-grow: 1;
+    margin-left: 250px; /* отступ для sidebar */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 300px;
+    padding: 10px;
+    background-color: #2a2a2a;
+    border: 1px solid darkgrey;
+    border-radius: 5px;
+    color: white;
+    outline: none;
+}
+
+.invite-button, .friends-list-button, .invitation-list-button {
+    padding: 10px 10px;
+    background-color: #0a84ff; /* Pop of blue to bring attention to the button */
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+.invite-button:hover, .friends-list-button:hover, .invitation-list-button:hover {
+    background-color: #086ef0;
+}
+
+.friends-list {
+    display: none;
+}
+
+.hidden {
+    display: none;
+}
+
+.sidebar {
+    width: 250px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #2a2a2a;
+    overflow: auto;
+}
+
+.sidebar-header {
+    padding: 15px;
+    display: flex;
+    flex-direction: row; /* гарантирует горизонтальное выравнивание элементов */
+    align-items: center;
+    justify-content: space-between; /* добавляет пробел между элементами */
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.dropdown .dropbtn {
+    background-color: #2a2a2a;
+    color: white;
+    /* padding: 5px; */
+    border: none;
+    cursor: pointer;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.4);
+}
+
+.dropdown-menu-content {
+    margin-top: 30px;
+    display: none;
+    position: fixed; /* Здесь используется fixed вместо absolute */
+    left: 0; /* Отступ с левого края равен нулю по умолчанию */
+    top: 60px; /* Отступ сверху равен высоте кнопки меню */
+    background-color: rgba(42, 42, 42, 0.8);
+    min-width: 200px; /* Задаем минимальную ширину для выпадающего меню */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    z-index: 1;
+}
+
+.dropdown-menu-content a {
+    color: white;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-menu-content a:hover {
+    background-color: #1e1e1e;
+}
+
+.show {
+    display: block;
+}
+
+/* Дополнительные стили для списка друзей */
+
+/*  Add styles for the friend-list items when they are added dynamically */

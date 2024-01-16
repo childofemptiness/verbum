@@ -18,6 +18,7 @@ define ("HTML", "app" . DS . "Views");
 define ("DEFAULT_CONTROLLER", "Main");
 define ("DEFAULT_METHOD", "home");
 define ("NOT_FOUND", "notfound");
-define("AUTHORIZE", "loginpage");
+define("AUTHORIZE_CONTROLLER", "Auth");
+define("AUTHORIZE_METHOD", "loginpage");
 
 

@@ -8,7 +8,7 @@ use PHPMailer\PHPMailer\Exception;
 class HelperFunctions{
     function redirect($location){
       header("Location: http://verbum/$location");
-      exit();
+      exit(0);
   }
   // Функция для отправки json объекта
   static function send_json($data)

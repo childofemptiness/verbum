@@ -129,23 +129,23 @@ class DbModel {
     }
 
     return $rows;    
-}
+  }
 
   public function catchJson()
   {
       return json_decode(file_get_contents('php://input'), true);
-}
+  }
   
 
-  protected function getUserID()
+  protected function sendUserId()
   {
-     HelperFunctions::send_json(['id' => $_SESSION['id']]);
-}
+     return $_SESSION['id'];
+  }
 
   protected function lastInsertId()
   {
     return $this->pdo->lastInsertId();
-}
+  }
 }
 
 

@@ -17,4 +17,9 @@ class MainController extends Controller{
         $this->view->page_title = "Home";
         $this->get_model()->build_page($this->method);
     }
+
+    public function getusername() {
+        $userFullName = $this->get_model()->getUserName();
+        $this->helper->send_json($userFullName);
+    }
 }

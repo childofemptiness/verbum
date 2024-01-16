@@ -25,7 +25,7 @@ class AuthModel extends DbModel{
         } else {
             // Сравнение паролей
                if($password == $user[0]['password']) {
-                if ($this->isUserVerified($requestData)[0]['right_level'] > 0)
+                if ($this->isUserVerified($requestData)[0]['rights'] > 0)
                 { // Ситуация 2: Пользователь авторизован успешно
                     $response['status'] = 200;
                     $response['message'] = 'Успешная аутентификация!';
@@ -107,8 +107,9 @@ class AuthModel extends DbModel{
         return bin2hex(random_bytes(16));
     }
 
-    public function activation($args) {
-        $activation_code = $args;
+    public function activation($token) {
+ 
+        $activation_code = $token;
         $result = $this->verifyUser($activation_code);
         return $result;
     }
@@ -128,39 +129,39 @@ class AuthModel extends DbModel{
     // Запуск сесси пользователя
     function createUserSession($requestData)
     {
-        $email = $requestData['email'];
-        $query = 'SELECT id FROM users WHERE :email = email';
-        $result = $this->get_query($query, ['email'=> $email]);
-        $_SESSION['id'] = $result[0]['id'];
+        $username = $requestData['username'];
+        $query = 'SELECT user_id FROM users WHERE :username = username';
+        $result = $this->get_query($query, ['username'=> $username]);
+        $_SESSION['id'] = $result[0]['user_id'];
     }
     
      // Проверяем, существует ли пользователь в бд
      function isUserExists($requestData)
      {
-         $email = $requestData['username'];
+         $username = $requestData['username'];
          $query = 'SELECT * FROM users WHERE username = :username';
-         $result = $this->get_query($query, ['email'=> $email]);
+         $result = $this->get_query($query, ['username'=> $username]);
          return $result;
      }
 
     // Проверка, подтвердил ли пользователь почту
-    function isUserVerified($requestData)
+    public function isUserVerified($requestData)
     {
-        $username = $requestData["username"];
+        $username = $requestData['username'];
         $query = 'SELECT rights FROM users WHERE username = :username';
         $rights = $this->get_query($query, ['username'=> $username]);
         return $rights;
     }
    
     // Подтвердить пользователя в БД
-    function verifyUser($activation_code)
+    public function verifyUser($activation_code)
     {
         $query = 'UPDATE users SET rights = 1 WHERE activation_code = :activation_code';
         $this->set_query($query, ['activation_code'=> $activation_code]);
         return 1;
     }
 
-    function logout() {
+    public function logOut() {
         unset( $_SESSION['id'] );
         session_destroy();
     }
