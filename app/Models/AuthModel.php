@@ -3,50 +3,61 @@
 namespace App\Models;
 
 use App\Views\View;
-use Firebase\JWT\JWT;
 
-class AuthModel extends DbModel{
+class AuthModel extends DbModel {
     private $output;
+    private $usersModel;
     public function __construct(View $view){
         parent:: __construct();
         $this->output = $view;
+        $this->usersModel = new UsersModel();
     }
 
-      // Функция для авторизации пользователя РАЗДЕЛИТЬ НА БОЛЕЕ МЕЛКИЕ ФУНКЦИИ!!!
-      public function loginUser($requestData) {
-        $password = $requestData['password'];
-        // Проверка, есть ли пользователь с такой почтой
-        $user = $this->isUserExists($requestData);
-        // Здесь будут ошибки при авторизации для отправки на front
-        $response = array();
+      // Эту функцию можно поместить в класс AuthModel
 
-        if (!$user) {
-            $response['status'] = 201; // Ситуация 1: Пользователь с такой почтой не найден
-            $response['message'] = 'Такой пользователь не найден';
-        } else {
-            // Сравнение паролей
-               if($password == $user[0]['password']) {
-                if ($this->isUserVerified($requestData)[0]['rights'] > 0)
-                { // Ситуация 2: Пользователь авторизован успешно
-                    $response['status'] = 200;
-                    $response['message'] = 'Успешная аутентификация!';
-                } 
-                else 
-                { // Пользователь не подтвердил свою почту
-                    $response['status'] = 202;
-                    $response['message'] = 'Подтвердите свою почту!';
-                }
-            } 
-            else {
-                { // Ситуация 3: Неправильный пароль
-                    $response['status'] = 203;
-                    $response['message'] = 'Неправильный пароль';
-                }
-            }
-        }
+    public function loginUser($requestData) {
+        $user = $this->usersModel->getUserInfo($requestData['username']);
+        $response = $this->authenticate($user, $requestData['password']);
         return $response;
     }
 
+
+    // Аутентификация пользователя - отдельная функция с проверками пароля и прав
+    private function authenticate($user, $password) {
+        $response = [];
+
+        if (!$user) {
+            return $this->createResponse(201, 'Такой пользователь не найден');
+        }
+
+        if (!$this->verifyPassword($password, $user['password'])) {
+            return $this->createResponse(203, 'Неправильный пароль');
+        } 
+
+        if (!$this->isUserVerified($user)) {
+            return $this->createResponse(202, 'Подтвердите свою почту!');
+        }
+        
+        return $this->createResponse(200, 'Успешная аутентификация!');
+    }
+
+    // Проверка пароля
+    private function verifyPassword($inputPassword, $storedPasswordHash) {
+        return password_verify($inputPassword, $storedPasswordHash);
+    }
+
+    // Проверка, подтвердил ли пользователь свой email
+    private function isUserVerified($user) {
+        return $user['rights'] > 0;
+    }
+
+    // Обобщенная функция для создания ответа
+    private function createResponse($status, $message) {
+        return [
+            'status' => $status,
+            'message' => $message
+        ];
+    }
     
     // Проверка данных из формы авторизации на правильность их формата
     public function validateLogData($requestData)
@@ -102,86 +113,24 @@ class AuthModel extends DbModel{
         }
         return $errors;
     }
-    public function generateActivationCode()
+
+    // Создание сессии
+    public function createUserSession($userName)
     {
-        return bin2hex(random_bytes(16));
+        $userId = $this->usersModel->getUserIdByUserName($userName);
+        $_SESSION['id'] = $userId;
     }
 
     public function activation($token) {
- 
         $activation_code = $token;
-        $result = $this->verifyUser($activation_code);
+        $result = $this->usersModel->verifyUser($activation_code);
         return $result;
-    }
-    
-    public function generateJWTToken($userId) {
-        $key = 'IAmBatman';
-
-        $payload = [
-            "iss" => "http://verbum/", // Издатель токена
-            "aud" => "http://verbum/", // Аудитория токена
-            "iat" => time(), // Время, когда токен был выпущен
-            "nbf" => time(), // Время, до которого токен не может быть принят
-            "exp" => time() + 7200, // Срок действия токена (например, 2 часа)
-            "sub" => $userId, // Идентификатор пользователя
-        ];
-
-        $jwt = JWT::encode($payload, $key, 'HS256');
-
-        $_SESSION['token'] = $jwt;
-    }
-
-    // Добавляем пользователя в бд, но без присвоения каких-либо прав
-    public  function addUserInDB($requestData)
-    {
-        $requestData['activation_code'] = $this->generateActivationCode();
-        $requestData['rights'] = 0;
-        $sql = 'INSERT INTO users (name, surname, username, password, email, activation_code, rights) VALUES (:name, :surname, :username, :password, :email, :activation_code, :rights)';
-        $this->set_query($sql, $requestData);
-        return $requestData;
-    }
-
-    // Запуск сесси пользователя
-    public function createUserSession($requestData)
-    {
-        $username = $requestData['username'];
-        $query = 'SELECT user_id FROM users WHERE :username = username';
-        $result = $this->get_query($query, ['username'=> $username]);
-        $_SESSION['id'] = $result[0]['user_id'];
-        $this->generateJWTToken($_SESSION['id']);
-    }
-    
-     // Проверяем, существует ли пользователь в бд
-     public function isUserExists($requestData)
-     {
-         $username = $requestData['username'];
-         $query = 'SELECT * FROM users WHERE username = :username';
-         $result = $this->get_query($query, ['username'=> $username]);
-         return $result;
-     }
-
-    // Проверка, подтвердил ли пользователь почту
-    public function isUserVerified($requestData)
-    {
-        $username = $requestData['username'];
-        $query = 'SELECT rights FROM users WHERE username = :username';
-        $rights = $this->get_query($query, ['username'=> $username]);
-        return $rights;
-    }
-   
-    // Подтвердить пользователя в БД
-    public function verifyUser($activation_code)
-    {
-        $query = 'UPDATE users SET rights = 1 WHERE activation_code = :activation_code';
-        $this->set_query($query, ['activation_code'=> $activation_code]);
-        return 1;
     }
 
     public function logOut() {
         unset( $_SESSION['id'] );
         session_destroy();
     }
-
 
     public function build_page($page_name) {    
         $htm_src = $this->output->get_page($page_name);   

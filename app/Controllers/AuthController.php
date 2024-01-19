@@ -1,7 +1,6 @@
 <?php
 namespace App\Controllers;
 use App\Core\HelperFunctions;
-use App\Core\RedisSessionHandler;
 
 class AuthController extends Controller{
     protected $helper;
@@ -11,7 +10,6 @@ class AuthController extends Controller{
         parent::__construct($controller, $method);
         $this->load_model();
         $this->helper = new HelperFunctions();
-        $this->redis = new RedisSessionHandler();
     }
 
     public function loginpage(){
@@ -26,7 +24,7 @@ class AuthController extends Controller{
     }
 
     public function login(){
-        $requestData = $this->get_model()->catchJson();
+        $requestData = $this->helper->catchJson();
         // Проверяем данные на валидность
         $response = $this->get_model()->validateLogData($requestData);
         // Если никаких ошибок нет, проверяем, авторизован ли пользователь
@@ -44,7 +42,7 @@ class AuthController extends Controller{
     public function register() {
         
         // Получаем данные с формы регистрации
-        $requestData = $this->get_model()->catchJson();
+        $requestData = $this->helper->catchJson();
         // Проверяем данные на валидность
         $response = $this->get_model()->validateRegData($requestData);
         if(empty($response)) {

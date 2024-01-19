@@ -55,11 +55,10 @@ const getFormData = (form) => {
         // Если статус 200, показываем сообщение об успешном входе
         window.location.href = '/main/home';
         showFlashMessage(message, 'green');
-        console.log(message);
       } else {
         window.location.href = '/auth/loginpage';
         showFlashMessage(message, 'red');
-        console.log(message);
+
       }
         
       

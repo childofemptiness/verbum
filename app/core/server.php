@@ -5,12 +5,12 @@ namespace App\Core;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use App\Core\RedisSessionHandler;
-use Predis\Client;
 
 class WebSocketHandler implements MessageComponentInterface {
     protected $clients;
-    private $redis;
-    protected $sessData;
+    protected $redis;
+    protected $session;
+    protected $queryParams;
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
@@ -18,16 +18,19 @@ class WebSocketHandler implements MessageComponentInterface {
     }
 
     public function onOpen(ConnectionInterface $conn) {
-        $sessionId = $this->getSessionIdFromRequest($conn);
 
-        $sessData = $this->redis->read($sessionId);
+        $this->queryParams = $this->getKeysFromRequest($conn);
 
-        $sessionDataArray = unserialize($sessData);
+        $sessionId = $this->queryParams['phpsessid'];
 
-        $this->clients->attach($conn);
-        echo "New client connected: {$conn->resourceId}\n";
-        $token = $this->getTokenFromRequest($conn);
-        $this->validateJWTToken($token, $sessionDataArray['token'], $conn);
+        $this->session = $this->getSessionData($sessionId);
+
+        $clientToken = $this->queryParams['token'];
+
+        if ($this->validateSocketConnection($this->session['token'], $clientToken, $conn)) {
+            $this->clients->attach($conn, $this->session['id']);
+            echo "New client connected, token verified: {$conn->resourceId}\n";
+        }
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
@@ -54,29 +57,25 @@ class WebSocketHandler implements MessageComponentInterface {
     }
 
     public function handleFriendRequest(ConnectionInterface $from, $data) {
-
+        $addresseeID = $data->userTagValue - 666666;
     }
-    protected function getTokenFromRequest(ConnectionInterface $conn) {
+    protected function getKeysFromRequest(ConnectionInterface $conn) {
         $queryParams = array();
         parse_str($conn->httpRequest->getUri()->getQuery(), $queryParams);
-        $token = $queryParams['token'] ?? null;
-        return $token;
+        return $queryParams;
     }
 
-    protected function getSessionIdFromRequest(ConnectionInterface $conn) {
-        $queryParams = array();
-        parse_str($conn->httpRequest->getUri()->getQuery(), $queryParams);
-        $sessionId = $queryParams['phpsessid'];
-        return $sessionId;
+    protected function getSessionData($sessionId) {
+        $sessionData = $this->redis->read($sessionId);
+        $sessionDataArray = unserialize($sessionData);
+        return $sessionDataArray;
+
     }
 
-    protected function validateJWTToken($sessionToken, $clientToken, ConnectionInterface $conn) {
-        echo $sessionToken . "\n";
-        echo $clientToken . "\n";
+    protected function validateSocketConnection($sessionToken, $clientToken, ConnectionInterface $conn) {
         if (($sessionToken !== $clientToken)) {
             $conn->close();
         }
         echo "Token verified\n";
     }
- 
 }
