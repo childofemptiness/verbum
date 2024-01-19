@@ -48,7 +48,9 @@ const getFormData = (form) => {
       const responseData = await response.json();
       const status = responseData.status;
       const message = responseData.message;
-  
+      // Токен для websocket авторизации
+      console.log(responseData.token);
+      localStorage.setItem('userToken', responseData.token);
       if (status === 200) {
         // Если статус 200, показываем сообщение об успешном входе
         window.location.href = '/main/home';

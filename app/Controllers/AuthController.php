@@ -1,14 +1,17 @@
 <?php
 namespace App\Controllers;
 use App\Core\HelperFunctions;
+use App\Core\RedisSessionHandler;
 
 class AuthController extends Controller{
     protected $helper;
+    protected $redis;
 
     public function __construct($controller, $method){
         parent::__construct($controller, $method);
         $this->load_model();
         $this->helper = new HelperFunctions();
+        $this->redis = new RedisSessionHandler();
     }
 
     public function loginpage(){
@@ -17,6 +20,7 @@ class AuthController extends Controller{
     }
 
     public function registerpage(){
+       
         $this->view->page_title = "Register";
         $this->get_model()->build_page("register");
     }
@@ -29,8 +33,8 @@ class AuthController extends Controller{
         if(empty($response)) {
             $response = $this->get_model()->loginUser($requestData);
             if ($response['status'] == 200) {
-                $this->get_model()->createUserSession($requestData);    
-              //  $this->helper->redirect('main/home');
+                $this->get_model()->createUserSession($requestData);
+                $response['token'] = $_SESSION['token'];    
             } 
         }
         $this->helper->send_json($response);
@@ -38,6 +42,7 @@ class AuthController extends Controller{
 
      // Регистрация
     public function register() {
+        
         // Получаем данные с формы регистрации
         $requestData = $this->get_model()->catchJson();
         // Проверяем данные на валидность
@@ -67,5 +72,4 @@ class AuthController extends Controller{
         $this->get_model()->logOut();
         $this->helper->redirect('auth/loginpage');
     }
-    
 }

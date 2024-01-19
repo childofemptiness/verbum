@@ -4,10 +4,7 @@ use App\Core\HelperFunctions;
 use PDO;
 use PDOException;
 
-if (session_id() == '') session_start();
-
 class DbModel {
-
   protected $rows = array();  
   protected $conx;
   protected $new_id;

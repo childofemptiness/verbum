@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Models;
-use App\Views\View;
 
+use App\Views\View;
+use Firebase\JWT\JWT;
 
 class AuthModel extends DbModel{
     private $output;
@@ -11,8 +12,8 @@ class AuthModel extends DbModel{
         $this->output = $view;
     }
 
-      // Функция для авторизации пользователя
-      function loginUser($requestData) {
+      // Функция для авторизации пользователя РАЗДЕЛИТЬ НА БОЛЕЕ МЕЛКИЕ ФУНКЦИИ!!!
+      public function loginUser($requestData) {
         $password = $requestData['password'];
         // Проверка, есть ли пользователь с такой почтой
         $user = $this->isUserExists($requestData);
@@ -48,7 +49,7 @@ class AuthModel extends DbModel{
 
     
     // Проверка данных из формы авторизации на правильность их формата
-    function validateLogData($requestData)
+    public function validateLogData($requestData)
     {
         $response = [];
         if(empty(trim($requestData['username'])) || empty(trim($requestData['password']))) 
@@ -57,7 +58,6 @@ class AuthModel extends DbModel{
             $response['message'] = 'Все поля должны быть заполнены';
         }
         return $response;
-
     }
     // Проверка данных из формы регистрации
     public function validateRegData($requestData) {
@@ -102,7 +102,7 @@ class AuthModel extends DbModel{
         }
         return $errors;
     }
-    function generateActivationCode()
+    public function generateActivationCode()
     {
         return bin2hex(random_bytes(16));
     }
@@ -114,10 +114,25 @@ class AuthModel extends DbModel{
         return $result;
     }
     
+    public function generateJWTToken($userId) {
+        $key = 'IAmBatman';
 
+        $payload = [
+            "iss" => "http://verbum/", // Издатель токена
+            "aud" => "http://verbum/", // Аудитория токена
+            "iat" => time(), // Время, когда токен был выпущен
+            "nbf" => time(), // Время, до которого токен не может быть принят
+            "exp" => time() + 7200, // Срок действия токена (например, 2 часа)
+            "sub" => $userId, // Идентификатор пользователя
+        ];
+
+        $jwt = JWT::encode($payload, $key, 'HS256');
+
+        $_SESSION['token'] = $jwt;
+    }
 
     // Добавляем пользователя в бд, но без присвоения каких-либо прав
-     function addUserInDB($requestData)
+    public  function addUserInDB($requestData)
     {
         $requestData['activation_code'] = $this->generateActivationCode();
         $requestData['rights'] = 0;
@@ -127,16 +142,17 @@ class AuthModel extends DbModel{
     }
 
     // Запуск сесси пользователя
-    function createUserSession($requestData)
+    public function createUserSession($requestData)
     {
         $username = $requestData['username'];
         $query = 'SELECT user_id FROM users WHERE :username = username';
         $result = $this->get_query($query, ['username'=> $username]);
         $_SESSION['id'] = $result[0]['user_id'];
+        $this->generateJWTToken($_SESSION['id']);
     }
     
      // Проверяем, существует ли пользователь в бд
-     function isUserExists($requestData)
+     public function isUserExists($requestData)
      {
          $username = $requestData['username'];
          $query = 'SELECT * FROM users WHERE username = :username';
