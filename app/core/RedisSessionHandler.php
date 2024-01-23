@@ -3,10 +3,8 @@
 namespace App\Core;
 
 use Predis\Client;
-use Exception;
 use SessionHandlerInterface;
 
-//use SessionHandlerInterface;
 
 class RedisSessionHandler implements SessionHandlerInterface {
     public $ttl = 1800;
@@ -33,12 +31,11 @@ class RedisSessionHandler implements SessionHandlerInterface {
         unset($this->redis);
         return true;
     }
-    #[\ReturnTypeWillChange]
     public function read($id) :bool|string {
        $id = $this->prefix . $id;
        $sessData = $this->redis->get($id);
        $this->redis->expire($id, $this->ttl);
-       return (string)$sessData;
+       return $sessData;
     }
 
     public function write($id, $data) :bool {
@@ -53,7 +50,6 @@ class RedisSessionHandler implements SessionHandlerInterface {
         $this->redis->del($id);
         return true;
     }
-    #[\ReturnTypeWillChange]
     public function gc($max_lifetime) :bool {
         return true;
     }

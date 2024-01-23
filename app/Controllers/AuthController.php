@@ -31,10 +31,12 @@ class AuthController extends Controller{
         if(empty($response)) {
             $response = $this->get_model()->loginUser($requestData);
             if ($response['status'] == 200) {
-                $this->get_model()->createUserSession($requestData);
+                $this->get_model()->createUserSession($requestData['username']);
+                $this->helper->generateJWTToken($_SESSION['id']);
                 $response['token'] = $_SESSION['token'];    
             } 
         }
+
         $this->helper->send_json($response);
     }
 

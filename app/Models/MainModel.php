@@ -6,20 +6,22 @@ use App\Views\View;
 class MainModel extends DbModel{
 
     protected $output;
+    private $usersModel;
 
     public function __construct(View $view){
         parent:: __construct();
         $this->output = $view;
+        $this->usersModel = new UsersModel();
+    }
+    
+    public function getUserName() {
+        $userId = $_SESSION['id'];
+        $userFistName = $this->usersModel->getUserFieldById('name', $userId);
+        $userLastName = $this->usersModel->getUserFieldById('surname', $userId);
+        $userFullName = $userFistName . ' ' . $userLastName;
+        return $userFullName;
     }
 
-    public function getUserName() {
-        $userId = $this->sendUserId();
-        $query = 'SELECT name, surname FROM users WHERE user_id = :userId';
-        $params = ['userId' => $userId];
-        $result = $this->get_query($query, $params);
-        $fullName = $result[0]['name'] . ' ' . $result[0]['surname'];
-        return $fullName;
-    }
 
     public function build_page($page_name) {    
         $htm_src = $this->output->get_page($page_name);   

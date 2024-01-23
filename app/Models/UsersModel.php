@@ -19,49 +19,47 @@ class UsersModel extends DbModel {
            $this->set_query($sql, $requestData);
            return $requestData;
        }
-   
-
-       public function getUserIdByUserName($userName) {
-        $query = 'SELECT user_id FROM users WHERE :username = username';
-        $params = ['userName' => $userName];
-        $userId = $this->get_query($query, $params)[0]['user_id'];
-        return $userId;
-       }
-
-       public function getUserIdBySession() {
-        return $_SESSION['id'];
-       }
-
+       
        public function setUserIsActive($userId) {
            $query = 'UPDATE users SET is_active = true WHERE user_id = :userId';
            $params = ['userId' => $userId];
            $this->set_query($query, $params);
        }
-       
-        // Проверяем, существует ли пользователь в бд
-        public function getUserInfo($userName)
-        {
-            $query = 'SELECT * FROM users WHERE username = :username';
+       // Получить id пользователя по никнейнму
+       public function getUserId($userName) {
+            $query = 'SELECT user_id FROM users WHERE username = :userName';
             $params = ['userName' => $userName];
+            $results =  $this->get_query($query, $params);
+            $userId = $results[0]['user_id'];
+            return $userId;
+            
+       }
+
+        // Универсальная функция, возвращает любое поле по любому ключу(Имеет смысл использовать, если нужно одно поле)
+        public function getUserFieldById($fieldName, $userId)
+        {
+            $query = "SELECT $fieldName FROM users WHERE user_id = :userId";
+            $params = ['userId' => $userId];
+            if ($fieldName == '*') {
+                $result = $this->get_query($query, $params)[0];
+            }
+            else $result = $this->get_query($query, $params)[0][$fieldName];
+            return $result;
+        }
+        // Если выше стоящая функция по ключу * выдает всю инфу, эту функцию можно удалить
+        public function getUserById($userId) {
+            $query = 'SELECT * FROM users WHERE user_id = :userId';
+            $params = ['userId' => $userId];
             $result = $this->get_query($query, $params)[0]['*'];
             return $result;
         }
-   
-       // Проверка, подтвердил ли пользователь почту
-       public function isUserVerified($requestData)
-       {
-           $username = $requestData['username'];
-           $query = 'SELECT rights FROM users WHERE username = :username';
-           $rights = $this->get_query($query, ['username'=> $username]);
-           return $rights;
-       }
       
        // Подтвердить пользователя в БД
-       public function verifyUser($activation_code)
+       public function verifyUser($activationCode)
        {
-           $query = 'UPDATE users SET rights = 1 WHERE activation_code = :activation_code';
-           $this->set_query($query, ['activation_code'=> $activation_code]);
-           return 1;
+           $query = 'UPDATE users SET rights = 1 WHERE activation_code = :activationCode';
+           $params = ['activationCode' => $activationCode];
+           $this->set_query($query, $params);
        }
 
     // Проверка, в сети ли пользователь
@@ -71,5 +69,4 @@ class UsersModel extends DbModel {
         $result = $this->get_query($sql, $params)[0]['is_active'];
         return $result;
     }
-
 }

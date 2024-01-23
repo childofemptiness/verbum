@@ -2,19 +2,23 @@
 
 namespace App\Core;
 
+use Predis\Client;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use App\Core\RedisSessionHandler;
 
 class WebSocketHandler implements MessageComponentInterface {
     protected $clients;
-    protected $redis;
+    protected $sessionHandler;
     protected $session;
     protected $queryParams;
+    protected $redis;
+
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
-        $this->redis = new RedisSessionHandler();
+        $this->sessionHandler = new RedisSessionHandler();
+        $this->redis = new Client();
     }
 
     public function onOpen(ConnectionInterface $conn) {
@@ -31,15 +35,15 @@ class WebSocketHandler implements MessageComponentInterface {
             $this->clients->attach($conn, $this->session['id']);
             echo "New client connected, token verified: {$conn->resourceId}\n";
         }
+        else {
+            $conn->close();
+        }
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        
         $data = json_decode($msg);
         switch($data->type) {
-            case 'friend-request';
-            $this->handleFriendRequest($from, $data);
-            break;
+            
         }
     }
 
@@ -56,9 +60,7 @@ class WebSocketHandler implements MessageComponentInterface {
         $conn->close();
     }
 
-    public function handleFriendRequest(ConnectionInterface $from, $data) {
-        $addresseeID = $data->userTagValue - 666666;
-    }
+
     protected function getKeysFromRequest(ConnectionInterface $conn) {
         $queryParams = array();
         parse_str($conn->httpRequest->getUri()->getQuery(), $queryParams);
@@ -66,16 +68,12 @@ class WebSocketHandler implements MessageComponentInterface {
     }
 
     protected function getSessionData($sessionId) {
-        $sessionData = $this->redis->read($sessionId);
+        $sessionData = $this->sessionHandler->read($sessionId);
         $sessionDataArray = unserialize($sessionData);
         return $sessionDataArray;
-
     }
 
     protected function validateSocketConnection($sessionToken, $clientToken, ConnectionInterface $conn) {
-        if (($sessionToken !== $clientToken)) {
-            $conn->close();
-        }
-        echo "Token verified\n";
+       return $sessionToken === $clientToken;
     }
 }

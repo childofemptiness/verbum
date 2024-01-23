@@ -49,7 +49,6 @@ class Router {
                 // Вызов соответствующего контроллера и метода
                 list($controller, $method) = explode('@', $handler, 2); 
 
-
                 $activationFlag = $method == 'activation' ? true : false;
 
                 $controller_class = "App\\Controllers\\" . $controller . "Controller";

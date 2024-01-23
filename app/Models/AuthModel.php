@@ -16,25 +16,29 @@ class AuthModel extends DbModel {
       // Эту функцию можно поместить в класс AuthModel
 
     public function loginUser($requestData) {
-        $user = $this->usersModel->getUserInfo($requestData['username']);
-        $response = $this->authenticate($user, $requestData['password']);
+
+        $enteredUserName = $requestData['username'];
+        $enteredPassword = $requestData['password'];
+
+        $userId = $this->usersModel->getUserId($enteredUserName);
+        $response = $this->authenticate($userId, $enteredPassword);
+
         return $response;
     }
 
-
     // Аутентификация пользователя - отдельная функция с проверками пароля и прав
-    private function authenticate($user, $password) {
+    private function authenticate($userId, $password) {
         $response = [];
 
-        if (!$user) {
+        if (!$userId) {
             return $this->createResponse(201, 'Такой пользователь не найден');
         }
 
-        if (!$this->verifyPassword($password, $user['password'])) {
+        if (!$this->verifyPassword($password, $this->usersModel->getUserFieldById('password', $userId))) {
             return $this->createResponse(203, 'Неправильный пароль');
         } 
 
-        if (!$this->isUserVerified($user)) {
+        if (!($this->usersModel->getUserFieldById('rights', $userId) > 0)) {
             return $this->createResponse(202, 'Подтвердите свою почту!');
         }
         
@@ -43,6 +47,9 @@ class AuthModel extends DbModel {
 
     // Проверка пароля
     private function verifyPassword($inputPassword, $storedPasswordHash) {
+        // echo $inputPassword . "\n";
+        // echo $storedPasswordHash . "\n";
+        // echo password_verify($inputPassword, $storedPasswordHash);
         return password_verify($inputPassword, $storedPasswordHash);
     }
 
@@ -117,14 +124,13 @@ class AuthModel extends DbModel {
     // Создание сессии
     public function createUserSession($userName)
     {
-        $userId = $this->usersModel->getUserIdByUserName($userName);
+        $userId = $this->usersModel->getUserId($userName);
         $_SESSION['id'] = $userId;
     }
 
     public function activation($token) {
         $activation_code = $token;
-        $result = $this->usersModel->verifyUser($activation_code);
-        return $result;
+        $this->usersModel->verifyUser($activation_code);
     }
 
     public function logOut() {

@@ -1,51 +1,47 @@
 <body>
-    <div class="container">
-        <header class="header">
-            <form class="search-form">
-                <input type="text" id="user-search" class="search-input" placeholder="Поиск пользователей...">
-                <button type="submit" class="invite-button">Отправить приглашение</button>
-            </form>
-            <button class="invitation-list-button">Приглашения</button>
-            <div class="dropdown-invitations-content">
-                <template id="invitations-template">
-                    <div class="invitation">
-                      <span class="invitation-name"></span>
-                      <button class="accept-btn">Принять</button>
-                      <button class="decline-btn">Отклонить</button>
-                    </div>
-                  </template>
-                  
+    <div class="wrapper">
+      <aside class="left-sidebar">
+        <header class="left-sidebar-header">
+            <div class="dropdown">
+                <button class="menu-dropbtn">☰</button> <!-- Используются три горизонтальные полосы -->
+                <div class="dropdown-menu-content">
+                    <a href="/main/home">Главная</a>
+                    <a href="#">Профиль</a>
+                    <a href="/friends/home">Друзья</a>
+                    <a href="#">Уведомления</a>
+                    <a href="#">Безопасность</a>
+                    <a href="/auth/logout">Выход</a>
+                </div>
             </div>
-            <button class="friends-list-button">Список друзей</button>
+            <!-- остальная часть боковой колонки -->
+            <div class="user-info">
+                <i id="user-icon" class='bx bx-user-circle'></i>
+                <div class="user-friend-id"></div>
+            </div>
         </header>
-        <section class="friends-list hidden">
-            <!-- Здесь будет отображаться список друзей -->
-        </section>
+      </aside>
+      <div class="container">
+          <header class="header">
+              <form id="search-form">
+                  <input type="text" id="user-search" class="search-input" placeholder="Поиск пользователей...">
+                  <button type="submit" class="invite-button">Отправить приглашение</button>
+              </form>
+          </header>
+          <section class="friends-list">
+              <div class="friends-list-header">Друзья</div>
+          </section>
+      </div>
+      <aside class="right-sidebar">
+        <header class="right-sidebar-header">
+            <div class="invitation-dropdown">
+                <button class="invitation-dropbtn">Приглашения</button> <!-- Используются три горизонтальные полосы -->
+                <div class="invitation-dropdown-content">
+                    <button id="sent-button">Отправленные</button>
+                    <button id="recevied-button">Полученные</button>
+                </div>
+            </div>
+        </header>
+        <div class="invitations-list"></div>
+      </aside>
     </div>
-    
-    <aside class="sidebar">
-        <header class="sidebar-header">
-                <div class="dropdown">
-                    <button class="dropbtn">☰</button> <!-- Используются три горизонтальные полосы -->
-                    <div class="dropdown-menu-content">
-                        <a href="/main/home">Главная</a>
-                        <a href="#">Профиль</a>
-                        <a href="/friends/home">Друзья</a>
-                        <a href="#">Уведомления</a>
-                        <a href="#">Безопасность</a>
-                        <a href="/auth/logout">Выход</a>
-                    </div>
-                </div>
-                <!-- остальная часть боковой колонки -->
-                <div class="user-info">
-                    <i id="user-icon" class='bx bx-user-circle'></i>
-                    <h3 class="user-name"></h3>
-                </div>
-                <h3 class="user-friend-id"></h3>
-        </header>
-        <!-- Информация о пользователе -->
-        
-        <!-- Поле ввода для добавления друга -->
-        
-    </aside>
-</body>
+  </body>
