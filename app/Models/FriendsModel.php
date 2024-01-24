@@ -12,6 +12,7 @@ class FriendsModel extends DbModel {
     }
 
     public  function setFriendRequest($data) {
+
         $takerTag = $data['tag'];
         $takerId = $takerTag - 666666;
         $senderId = $this->getUserIdFromSession();
@@ -43,9 +44,12 @@ class FriendsModel extends DbModel {
 
     // Подумать насчет параметра для этих функций
     public function deleteAFriendRelation($senderId) {
+
         $takerId = $this->getUserIdFromSession();
-        $query = 'DELETE FROM frineds WHERE sender_id = :senderId AND taker_id = :takerId';
-        $params = ['senderId' => $senderId, 'taker_id' => $takerId];
+
+        $query = 'DELETE FROM friends WHERE sender_id = :senderId AND taker_id = :takerId';
+        $params = ['senderId' => $senderId, 'takerId' => $takerId];
+
         $this->set_query($query, $params);
     }
     // Запросы на дружбу, отправленные пользователем
@@ -118,6 +122,52 @@ class FriendsModel extends DbModel {
             ];
         }  
         return $invites;      
+    }
+    // Отправить список друзей пользователя
+    public function getFriendsList() {
+
+        $userId = $this->getUserIdFromSession();
+
+        $query = 'SELECT users.name, users.surname, users.username, users.user_id AS friendId
+        FROM users
+        WHERE users.user_id IN (
+            (SELECT sender_id FROM friends WHERE taker_id = :userId1 AND is_accepted = 1)
+            UNION
+            (SELECT taker_id FROM friends WHERE sender_id = :userId2 AND is_accepted = 1)
+        )';
+
+        $params = [
+            'userId1' => $userId,
+            'userId2' => $userId
+        ];
+
+        $results = $this->get_query($query, $params);
+
+        $friendsList = [];
+        foreach($results as $item) {
+            $friendsList[] = [
+                'tag' => $item['friendId'] + 666666,
+                'fullName' => $item['name'] . ' ' . $item['surname'],
+                'userName' => $item['username'],
+            ];
+        }
+
+        return $friendsList;
+    }
+
+    public function deleteFriend($data) {
+
+        $friendId = $data['tag'] - 666666;
+        $userId = $this->getUserIdFromSession();
+
+        $query = 'DELETE FROM friends WHERE ((sender_id = :userId1 AND taker_id = :friendId1) OR (sender_id = :friendId2 AND taker_id = :userId2)) AND is_accepted = 1';
+        $params = [
+            'userId1' => $userId,
+            'friendId1' => $friendId,
+            'userId2' => $userId,
+            'friendId2' => $friendId
+        ];
+        $this->set_query($query, $params);
     }
 
     public function build_page($page_name) {   

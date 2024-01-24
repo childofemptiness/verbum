@@ -2,6 +2,7 @@ let invitationsList;
 
 document.addEventListener('DOMContentLoaded', function() {
 
+    getFriendsList();
     // Использование функции getUserid
     getUserId().then((id) => {
         document.querySelector('.user-friend-id').innerHTML = "Ваш тэг: " + (666666 + id);
@@ -91,7 +92,8 @@ formElement.addEventListener('submit', function(event) {
 });
 
 async function sendFriendRequest(tag) {
-    const response = await fetch('/friends/getfriendrequest', {
+    console.log(tag);
+    const response = await fetch('/friends/setfriendrequest', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -150,6 +152,33 @@ async function sendResponseToRequest(flag, userId) {
     }
 }
 
+async function getFriendsList() {
+    try {
+        const response = await fetch(`/friends/sendfriendslist`);
+        if (!response.ok) { // Проверка на успешный ответ от сервера
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        displayFriendsList(data);
+    } catch (error) {
+        console.error('Произошла ошибка:', error);
+    }
+}
+
+async function sendFriendTagToDelete(tag) {
+    try {
+        const response = await fetch(`/friends/getfriendtagtodelete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application-json',
+            },
+            body: JSON.stringify({tag: tag})
+        });
+    }   catch (error) {
+        console.error('Произошла ошибка:', error);
+    }
+}
+
 function createInvitationItem(invitation, type) {
     const item = document.createElement("div");
     item.classList.add('invitation-item'); // Применяем класс для стилизации
@@ -186,9 +215,14 @@ function createButton(text, onClick) {
     button.onclick = function(event) {
         // Любая пользовательская логика, переданная через параметр onClick
         if (onClick) onClick(event);
-
         // Удаление родителя кнопки
         event.currentTarget.parentElement.parentElement.remove();
+        // Если после удаления этого приглашения других не осталось - удаляем кнопку "Скрыть"
+        const parent = document.querySelector('.invitations-list');
+        if (!parent.querySelector('.invitations-item')) {
+            const closeButton = document.getElementById('closeButton');
+            closeButton.remove();
+        }
     };
     return button;
 }
@@ -201,7 +235,7 @@ function renderInvitations(invitations, type) {
     const closeButton = document.createElement('button');
     closeButton.textContent = 'Скрыть';
     closeButton.classList.add('invitation-button');
-    closeButton.id = 'close-button';
+    closeButton.id = 'closeButton';
 
     closeButton.onclick = function() {
         invitationsList.innerHTML = '';
@@ -222,4 +256,65 @@ function renderInvitations(invitations, type) {
 }
 
 
- 
+// Выводим список друзей
+function displayFriendsList(friends) {
+    // Находим родительский контейнер для списка
+    const container = document.querySelector('.friends-list-section');
+    
+    const header = document.createElement('div');
+    header.innerHTML = 'Друзья:';
+    header.classList.add('friends-list-header');
+    // Создаем элемент ul, который будет содержать список друзей
+    const ul = document.createElement('ul');
+    ul.className = 'friends-list';
+    
+    // Для каждого друга создаем элемент списка и добавляем в ul
+    friends.forEach(friend => {
+      const li = document.createElement('li');
+      li.className = 'friend-item';
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = friend.fullName;
+      nameSpan.className = 'friend-name';
+      
+      const tagSpan = document.createElement('span');
+      tagSpan.textContent = `Tag: ${friend.tag}`;
+      tagSpan.className = 'friend-tag';
+      
+      const nickSpan = document.createElement('span');
+      nickSpan.textContent = `Nick: ${friend.userName}`;
+      nickSpan.className = 'friend-nick';
+      
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Удалить';
+      deleteButton.className = 'button button-delete';
+      // Добавление обработчика для удаления
+      deleteButton.addEventListener('click', () => {
+        ul.removeChild(li);
+        sendFriendTagToDelete(friend.tag);
+      });
+  
+      const messageButton = document.createElement('button');
+      messageButton.textContent = 'Написать';
+      messageButton.className = 'button button-message';
+      // Добавьте здесь подходящий обработчик для кнопки "Написать"
+      // ЗДЕСЬ БУДЕТ ПЕРЕХОД В ЧАТ МЕЖДУ ПОЛЬЗОВАТЕЛЕМ И ЕГО ДРУГОМ
+      // Собираем элемент списка с информацией и кнопками
+      li.appendChild(nameSpan);
+      li.appendChild(tagSpan);
+      li.appendChild(nickSpan);
+      li.appendChild(deleteButton);
+      li.appendChild(messageButton);
+  
+      // Добавляем элемент списка в ul
+      ul.appendChild(li);
+    });
+    
+    // Очищаем ранее добавленные друзей и добавляем новый список
+    container.innerHTML = '';
+    container.appendChild(header);
+    container.appendChild(ul);
+  }
+  
+
+  

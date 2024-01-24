@@ -42,4 +42,14 @@ class FriendsController extends Controller {
         if ($data['flag']) $this->get_model()->acceptFriendRequest($data['userId']);
         else $this->get_model()->deleteAFriendRelation($data['userId']);
     }
+
+    public function sendfriendslist() {
+        $data = $this->get_model()->getFriendsList();
+        $this->helper->send_json($data);
+    }
+
+    public function getfriendtagtodelete() {
+        $data = $this->helper->catchJson();
+        $this->get_model()->deleteFriend($data);
+    }
 }
