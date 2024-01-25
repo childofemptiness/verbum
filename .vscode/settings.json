@@ -1,2 +1,8 @@
 {
-}
+    "editor.formatOnSave": true,               // Включает форматирование при сохранении
+    "[php]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"  // Устанавливает Prettier по умолчанию для PHP
+    },
+    "prettier.requireConfig": false,           // Не требовать наличие файла конфигурации Prettier
+  }
+  

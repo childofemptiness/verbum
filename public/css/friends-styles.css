@@ -1,0 +1,319 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.wrapper {
+    display: flex;
+    justify-content: space-between; /* Распределяет между элементами равное пространство */
+    height: 100vh;
+  }
+
+/* Left Sidebar */
+
+.left-sidebar {
+    width: 250px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #2a2a2a;
+    flex-basis: 20%;
+}
+
+
+.left-sidebar-header {
+    padding: 15px;
+    display: flex;
+    flex-direction: row; /* гарантирует горизонтальное выравнивание элементов */
+    align-items: center;
+    justify-content: space-between; /* добавляет пробел между элементами */
+}
+
+.user-friend-id {
+    margin-left: 10px;
+    font-size: 17.35px;
+}
+
+.dropdown .menu-dropbtn {
+    background-color: #2a2a2a;
+    color: white;
+    font-size: 25px;
+    padding: 2px 8px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.4);
+    border-radius: 20px;
+}
+
+.dropdown-menu-content{
+    margin-top: 30px;
+    display: none;
+    position: fixed; /* Здесь используется fixed вместо absolute */
+    left: 0; /* Отступ с левого края равен нулю по умолчанию */
+    top: 60px; /* Отступ сверху равен высоте кнопки меню */
+    background-color: rgba(42, 42, 42, 0.8);
+    min-width: 200px; /* Задаем минимальную ширину для выпадающего меню */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    z-index: 1;
+}
+
+.dropdown-menu-content a {
+    color: white;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-menu-content a:hover {
+    background-color: #1e1e1e;
+}
+
+.show {
+    display: block;
+}
+
+/* Container */
+
+.container {
+    width: 100%;
+    margin-left: 250px;
+    margin-right: 250px; 
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    order: 1;
+    height: 100%;
+}
+
+.search-input {
+    width: 300px;
+    padding: 10px;
+    background-color: #2a2a2a;
+    border: 1px solid darkgrey;
+    border-radius: 5px;
+    color: white;
+    outline: none;
+}
+
+.invite-button {
+    padding: 10px 10px;
+    background-color: #0a84ff; /* Pop of blue to bring attention to the button */
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+.invite-button:hover {
+    background-color: #086ef0;
+}
+
+.friends-list-header {
+    position: fixed;
+    top: 250px;
+}
+/* Right Sidebar */
+
+.right-sidebar {
+    width: 250px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    flex-basis: 20%;
+}
+
+.right-sidebar-header {
+    padding: 15px;
+    flex-direction: row; /* гарантирует горизонтальное выравнивание элементов */
+    align-items: center;
+    justify-content: space-between; /* добавляет пробел между элементами */
+}
+
+.invitation-dropbtn {
+    padding: 4px 12px;
+    position: fixed;
+    background: none;
+    right: 25px;
+    color: #ffffff; /* белый цвет текста для контраста */
+    padding: 10px 10px; /* небольшой отступ для удобства нажатия */
+    font-size: 16px; /* размер шрифта */
+    border: none; /* убираем стандартные рамки кнопки */
+    border-radius: 5px; /* слегка скругляем углы для современного вида */
+    cursor: pointer; /* указываем, что элемент интерактивный */
+    transition: background-color 0.3s ease; /* плавный переход для фонового цвета */
+}
+
+.invitation-dropbtn:hover,
+.invitation-dropbtn:focus {
+    background-color: #2a2a2a; /* немного светлее при наведении и фокусе */
+    outline: none; /* убираем контур при фокусе, если он есть */
+}
+
+.invitation-dropbtn:active {
+    background-color: #0000ff; /* меняем фон на синий при нажатии */
+    color: #1a1a1a; /* меняем цвет текста на тёмный при нажатии */
+}
+
+/* Стили для символа или изображения справа от текста, указывающего на возможность раскрытия */
+.invitation-dropbtn:after {
+    content: '▼'; /* символ стрелки вниз */
+    font-size: 12px; /* размер символа стрелки */
+    margin-left: 10px; /* отступ от текста */
+}
+
+.invitation-dropdown-content {
+    display: none;
+    position: fixed; 
+    background-color: rgba(42, 42, 42, 0.8);
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    z-index: 1;
+    width: 143px; /* Контент наследует ширину активаторной кнопки */
+    /* Позиционируем контент выпадающего списка */
+    transform: translateX(-17.5%);
+    right: 0;
+    top: 60px;
+}
+
+/* Отдельные кнопки внутри выпадающего контента */
+.invitation-dropdown-content button {
+    background-color: #2a2a2a;
+    font-size: 16px;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%; /* Устанавливаю ширину кнопок меньше, чем ширина контента */
+    text-align: center; /* текст выравнивается по центру кнопки */
+    display: block; /* кнопки блочные, чтобы закрепить другие свойства расположения */
+    transition: background-color 0.3s ease;
+    height: 40px;
+}
+.invitation-dropdown-content button:hover {
+    background-color: #1a1a1a; /* темный фон при наведении */
+}
+
+/* styles.css */
+
+.invitations-list {
+    position: fixed;
+    margin-top: 200px;
+    margin-right: 20px;
+}
+.invitation-item {
+    background-color: #333; /* темно-серый цвет фона для приглашения */
+    color: white; /* белый текст */
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px; /* скругленные углы */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* легкая тень */
+}
+
+.invitation-item button {
+    margin-right: 10px; /* отступ справа для кнопки */
+}
+
+/* Дополнительные стили, если нужно */
+
+/* styles.css */
+
+/* ...другие стили... */
+
+#close-button {
+    position: fixed;
+    margin-top: -35px;
+    margin-right: 20px;
+}
+
+.invitation-button {
+    right: 0;
+    padding: 5px 15px;
+    margin: 5px;
+    background-color: #555;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+    outline: none;
+    transition: background-color 0.3s, box-shadow 0.3s; /* Анимация изменений фона и тени */
+}
+
+.invitation-button:hover {
+    background-color: #666; /* Немного осветлить кнопку при наведении */
+    box-shadow: 0 4px 5px rgba(0,0,0,0.4); /* Сделать тень более выраженной */
+}
+
+.invitation-button:active {
+    background-color: #444; /* Затемнить кнопку при нажатии */
+    box-shadow: 0 1px 1px rgba(0,0,0,0.3); /* Уменьшить тень */
+}
+
+
+/* Стили для контейнера кнопок, если требуется */
+.invitation-button-container {
+    display: flex; /* Использование Flexbox для выравнивания */
+    justify-content: center; /* Выравнивание кнопок по центру горизонтали */
+    align-items: center; /* Выравнивание кнопок по центру вертикали */
+    gap: 10px; /* Отступы между кнопками */
+}
+
+.friends-list {
+    margin-top: 220px;
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .friend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .friend-name {
+    font-size: 16px;
+    margin-right: 10px;
+  }
+  
+  .friend-tag {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .friend-nick {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .button {
+    cursor: pointer;
+    padding: 5px 10px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+  }
+  
+  .button-delete {
+    background-color: #ff4d4d;
+    color: white;
+  }
+  
+  .button-message {
+    background-color: #4caf50;
+    color: white;
+  }

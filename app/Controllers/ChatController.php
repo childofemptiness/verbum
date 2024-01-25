@@ -12,8 +12,8 @@ class ChatController extends Controller {
         $this->helper = new HelperFunctions();
     }
 
-    public function client() {
+    public function chat() {
         $this->view->page_title = "Chat";
-        $this->get_model()->build_page("client");
+        $this->get_model()->build_page('chat');
     }
 }

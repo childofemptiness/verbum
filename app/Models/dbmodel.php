@@ -4,10 +4,7 @@ use App\Core\HelperFunctions;
 use PDO;
 use PDOException;
 
-if (session_id() == '') session_start();
-
 class DbModel {
-
   protected $rows = array();  
   protected $conx;
   protected $new_id;
@@ -88,19 +85,19 @@ class DbModel {
   }
 
   # Submit SELECT SQL query
-  protected function get_query($sql, $params = []) {
+  protected function get_query($sql, $params = [], $flag = 0) {
     try {
         $statement = $this->pdo->prepare($sql);
-        foreach ($params as $key => &$value) {  // Обратите внимание на ссылку & перед $value
-          if ($key == 'booksPerPage' || $key == 'offset') {
-              // Поскольку LIMIT и OFFSET должны быть целыми числами, приводим их к нужному типу
-              $value = (int) $value;
-              // Используйте bindParam для привязки параметра по ссылке
-              $statement->bindParam(':' . $key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
-          } else {
-              $statement->bindValue(':' . $key, $value); // Оставляем как есть для других параметров
+        if ($flag === 1) {
+          foreach($params as $key => $value) {
+            $statement->bindValue(($key+1), $value);
           }
-      }
+        }
+        else {
+          foreach ($params as $key => &$value) {  // Обратите внимание на ссылку & перед $value
+            $statement->bindValue(':' . $key, $value); // Оставляем как есть для других параметров
+          }
+        }
         $statement->execute();
         $result = $statement->fetchAll(PDO::FETCH_ASSOC); // Вот здесь изменение - установим режим выборки ассоциативного массива
         $statement->closeCursor();
@@ -129,23 +126,13 @@ class DbModel {
     }
 
     return $rows;    
-}
+  }
 
-  public function catchJson()
-  {
-      return json_decode(file_get_contents('php://input'), true);
-}
-  
-
-  protected function getUserID()
-  {
-     HelperFunctions::send_json(['id' => $_SESSION['id']]);
-}
-
+  public function getUserIdFromSession() {
+    return $_SESSION['id'];
+  }
   protected function lastInsertId()
   {
     return $this->pdo->lastInsertId();
+  }
 }
-}
-
-

@@ -4,6 +4,7 @@ use App\Core\HelperFunctions;
 
 class AuthController extends Controller{
     protected $helper;
+    protected $redis;
 
     public function __construct($controller, $method){
         parent::__construct($controller, $method);
@@ -17,29 +18,33 @@ class AuthController extends Controller{
     }
 
     public function registerpage(){
+       
         $this->view->page_title = "Register";
         $this->get_model()->build_page("register");
     }
 
     public function login(){
-        $requestData = $this->get_model()->catchJson();
+        $requestData = $this->helper->catchJson();
         // Проверяем данные на валидность
         $response = $this->get_model()->validateLogData($requestData);
         // Если никаких ошибок нет, проверяем, авторизован ли пользователь
         if(empty($response)) {
             $response = $this->get_model()->loginUser($requestData);
             if ($response['status'] == 200) {
-                $this->get_model()->createUserSession($requestData);    
-              //  $this->helper->redirect('main/home');
+                $this->get_model()->createUserSession($requestData['username']);
+                $this->helper->generateJWTToken($_SESSION['id']);
+                $response['token'] = $_SESSION['token'];    
             } 
         }
+
         $this->helper->send_json($response);
     }
 
      // Регистрация
     public function register() {
+        
         // Получаем данные с формы регистрации
-        $requestData = $this->get_model()->catchJson();
+        $requestData = $this->helper->catchJson();
         // Проверяем данные на валидность
         $response = $this->get_model()->validateRegData($requestData);
         if(empty($response)) {
@@ -55,7 +60,7 @@ class AuthController extends Controller{
                 $response['message'] = 'Письмо с подтверждением отправлено на почту';
             }
         }
-    $this->helper->send_json($response);
+        $this->helper->send_json($response);
     }
 
     public function activation($args){
@@ -64,8 +69,7 @@ class AuthController extends Controller{
     }
 
     public function logout(){
-    $this->loginpage();
-    $this->get_model()->logout();
+        $this->get_model()->logOut();
+        $this->helper->redirect('auth/loginpage');
     }
-    
 }

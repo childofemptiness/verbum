@@ -4,7 +4,7 @@
 namespace App\Controllers;
 use App\Models;
 use App\Views\View;
-
+use App\Core\HelperFunctions;
 
 class Controller extends Application {
   
@@ -13,9 +13,10 @@ class Controller extends Application {
   protected $model;
   protected $view;
   protected $model_name;
-  
+  protected $helper;
   public function __construct($controller, $method) {
     parent::__construct();
+    $this->helper = new HelperFunctions();
     $this->controller = $controller;
     $this->method = $method;   
     $this->model_name = 'App\\Models\\' . $this->controller."Model"; 
@@ -36,10 +37,9 @@ class Controller extends Application {
   protected function get_model() {
     if (isset($this->model[$this->model_name]) && is_object($this->model[$this->model_name])) {
       return $this->model[$this->model_name];
-    }
-    else {      
-      return false;      
-    }
+    }     
+    
+    return false;      
   }
 
   
@@ -48,5 +48,3 @@ class Controller extends Application {
   //   return $this->view;
   // }
 }
-
-?>

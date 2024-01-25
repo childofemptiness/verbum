@@ -24,7 +24,7 @@ const getFormData = (form) => {
       data[key] = value;
     }
     return data;
-  }
+}
   // Делаем так, чтобы страница авторизации не перезагружалась при нажатии на кнпоку
   
   // Функция отправки запроса для авторизации
@@ -48,16 +48,18 @@ const getFormData = (form) => {
       const responseData = await response.json();
       const status = responseData.status;
       const message = responseData.message;
-  
+      // Токен для websocket авторизации
+      console.log(responseData.token);
+      localStorage.setItem('userToken', responseData.token);
       if (status === 200) {
+        console.log(555);
         // Если статус 200, показываем сообщение об успешном входе
         window.location.href = '/main/home';
         showFlashMessage(message, 'green');
-        console.log(message);
       } else {
         window.location.href = '/auth/loginpage';
         showFlashMessage(message, 'red');
-        console.log(message);
+
       }
         
       

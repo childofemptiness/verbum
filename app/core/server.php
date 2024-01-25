@@ -2,31 +2,48 @@
 
 namespace App\Core;
 
+use Predis\Client;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
+use App\Core\RedisSessionHandler;
 
-class WebSocketHandler implements MessageComponentInterface{
+class WebSocketHandler implements MessageComponentInterface {
     protected $clients;
+    protected $sessionHandler;
+    protected $session;
+    protected $queryParams;
+    protected $redis;
+
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
+        $this->sessionHandler = new RedisSessionHandler();
+        $this->redis = new Client();
     }
 
     public function onOpen(ConnectionInterface $conn) {
-        // Store the new connection to send messages to later
-        $this->clients->attach($conn);
-        echo "New client connected: {$conn->resourceId}\n";
+
+        $this->queryParams = $this->getKeysFromRequest($conn);
+
+        $sessionId = $this->queryParams['phpsessid'];
+
+        $this->session = $this->getSessionData($sessionId);
+
+        $clientToken = $this->queryParams['token'];
+
+        if ($this->validateSocketConnection($this->session['token'], $clientToken, $conn)) {
+            $this->clients->attach($conn, $this->session['id']);
+            echo "New client connected, token verified: {$conn->resourceId}\n";
+        }
+        else {
+            $conn->close();
+        }
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
-        $numRecv = count($this->clients) - 1;
-        echo sprintf('Connection %d sending message "$s" to %d other connections%s' . "\n", $from->resourceId, $msg, $numRecv, $numRecv == 1 ? '' : 's');
-
-        foreach($this->clients as $client) {
-            if ($from !== $client) {
-                // The sender is not the receiver, send to each client connected
-                $client->send($msg);
-            }
+        $data = json_decode($msg);
+        switch($data->type) {
+            
         }
     }
 
@@ -41,5 +58,22 @@ class WebSocketHandler implements MessageComponentInterface{
         echo "An error has occupered: {$e->getMessage()}\n";
 
         $conn->close();
+    }
+
+
+    protected function getKeysFromRequest(ConnectionInterface $conn) {
+        $queryParams = array();
+        parse_str($conn->httpRequest->getUri()->getQuery(), $queryParams);
+        return $queryParams;
+    }
+
+    protected function getSessionData($sessionId) {
+        $sessionData = $this->sessionHandler->read($sessionId);
+        $sessionDataArray = unserialize($sessionData);
+        return $sessionDataArray;
+    }
+
+    protected function validateSocketConnection($sessionToken, $clientToken, ConnectionInterface $conn) {
+       return $sessionToken === $clientToken;
     }
 }

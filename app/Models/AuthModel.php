@@ -1,54 +1,73 @@
 <?php
 
 namespace App\Models;
+
 use App\Views\View;
 
-
-class AuthModel extends DbModel{
+class AuthModel extends DbModel {
     private $output;
+    private $usersModel;
     public function __construct(View $view){
         parent:: __construct();
         $this->output = $view;
+        $this->usersModel = new UsersModel();
     }
 
-      // Функция для авторизации пользователя
-      function loginUser($requestData) {
-        $password = $requestData['password'];
-        // Проверка, есть ли пользователь с такой почтой
-        $user = $this->isUserExists($requestData);
-        // Здесь будут ошибки при авторизации для отправки на front
-        $response = array();
+      // Эту функцию можно поместить в класс AuthModel
 
-        if (!$user) {
-            $response['status'] = 201; // Ситуация 1: Пользователь с такой почтой не найден
-            $response['message'] = 'Такой пользователь не найден';
-        } else {
-            // Сравнение паролей
-               if($password == $user[0]['password']) {
-                if ($this->isUserVerified($requestData)[0]['right_level'] > 0)
-                { // Ситуация 2: Пользователь авторизован успешно
-                    $response['status'] = 200;
-                    $response['message'] = 'Успешная аутентификация!';
-                } 
-                else 
-                { // Пользователь не подтвердил свою почту
-                    $response['status'] = 202;
-                    $response['message'] = 'Подтвердите свою почту!';
-                }
-            } 
-            else {
-                { // Ситуация 3: Неправильный пароль
-                    $response['status'] = 203;
-                    $response['message'] = 'Неправильный пароль';
-                }
-            }
-        }
+    public function loginUser($requestData) {
+
+        $enteredUserName = $requestData['username'];
+        $enteredPassword = $requestData['password'];
+
+        $userId = $this->usersModel->getUserId($enteredUserName);
+        $response = $this->authenticate($userId, $enteredPassword);
+
         return $response;
     }
 
+    // Аутентификация пользователя - отдельная функция с проверками пароля и прав
+    private function authenticate($userId, $password) {
+        $response = [];
+
+        if (!$userId) {
+            return $this->createResponse(201, 'Такой пользователь не найден');
+        }
+
+        if (!$this->verifyPassword($password, $this->usersModel->getUserFieldById('password', $userId))) {
+            return $this->createResponse(203, 'Неправильный пароль');
+        } 
+
+        if (!($this->usersModel->getUserFieldById('rights', $userId) > 0)) {
+            return $this->createResponse(202, 'Подтвердите свою почту!');
+        }
+        
+        return $this->createResponse(200, 'Успешная аутентификация!');
+    }
+
+    // Проверка пароля
+    private function verifyPassword($inputPassword, $storedPasswordHash) {
+        // echo $inputPassword . "\n";
+        // echo $storedPasswordHash . "\n";
+        // echo password_verify($inputPassword, $storedPasswordHash);
+        return password_verify($inputPassword, $storedPasswordHash);
+    }
+
+    // Проверка, подтвердил ли пользователь свой email
+    private function isUserVerified($user) {
+        return $user['rights'] > 0;
+    }
+
+    // Обобщенная функция для создания ответа
+    private function createResponse($status, $message) {
+        return [
+            'status' => $status,
+            'message' => $message
+        ];
+    }
     
     // Проверка данных из формы авторизации на правильность их формата
-    function validateLogData($requestData)
+    public function validateLogData($requestData)
     {
         $response = [];
         if(empty(trim($requestData['username'])) || empty(trim($requestData['password']))) 
@@ -57,7 +76,6 @@ class AuthModel extends DbModel{
             $response['message'] = 'Все поля должны быть заполнены';
         }
         return $response;
-
     }
     // Проверка данных из формы регистрации
     public function validateRegData($requestData) {
@@ -102,69 +120,23 @@ class AuthModel extends DbModel{
         }
         return $errors;
     }
-    function generateActivationCode()
+
+    // Создание сессии
+    public function createUserSession($userName)
     {
-        return bin2hex(random_bytes(16));
+        $userId = $this->usersModel->getUserId($userName);
+        $_SESSION['id'] = $userId;
     }
 
-    public function activation($args) {
-        $activation_code = $args;
-        $result = $this->verifyUser($activation_code);
-        return $result;
-    }
-    
-
-
-    // Добавляем пользователя в бд, но без присвоения каких-либо прав
-     function addUserInDB($requestData)
-    {
-        $requestData['activation_code'] = $this->generateActivationCode();
-        $requestData['rights'] = 0;
-        $sql = 'INSERT INTO users (name, surname, username, password, email, activation_code, rights) VALUES (:name, :surname, :username, :password, :email, :activation_code, :rights)';
-        $this->set_query($sql, $requestData);
-        return $requestData;
+    public function activation($token) {
+        $activation_code = $token;
+        $this->usersModel->verifyUser($activation_code);
     }
 
-    // Запуск сесси пользователя
-    function createUserSession($requestData)
-    {
-        $email = $requestData['email'];
-        $query = 'SELECT id FROM users WHERE :email = email';
-        $result = $this->get_query($query, ['email'=> $email]);
-        $_SESSION['id'] = $result[0]['id'];
-    }
-    
-     // Проверяем, существует ли пользователь в бд
-     function isUserExists($requestData)
-     {
-         $email = $requestData['username'];
-         $query = 'SELECT * FROM users WHERE username = :username';
-         $result = $this->get_query($query, ['email'=> $email]);
-         return $result;
-     }
-
-    // Проверка, подтвердил ли пользователь почту
-    function isUserVerified($requestData)
-    {
-        $username = $requestData["username"];
-        $query = 'SELECT rights FROM users WHERE username = :username';
-        $rights = $this->get_query($query, ['username'=> $username]);
-        return $rights;
-    }
-   
-    // Подтвердить пользователя в БД
-    function verifyUser($activation_code)
-    {
-        $query = 'UPDATE users SET rights = 1 WHERE activation_code = :activation_code';
-        $this->set_query($query, ['activation_code'=> $activation_code]);
-        return 1;
-    }
-
-    function logout() {
+    public function logOut() {
         unset( $_SESSION['id'] );
         session_destroy();
     }
-
 
     public function build_page($page_name) {    
         $htm_src = $this->output->get_page($page_name);   

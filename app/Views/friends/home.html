@@ -1,0 +1,42 @@
+<body>
+    <div class="wrapper">
+      <aside class="left-sidebar">
+        <header class="left-sidebar-header">
+            <div class="dropdown">
+                <button class="menu-dropbtn">☰</button> <!-- Используются три горизонтальные полосы -->
+                <div class="dropdown-menu-content">
+                    <a href="/main/home">Главная</a>
+                    <a href="#">Профиль</a>
+                    <a href="/friends/home">Друзья</a>
+                    <a href="#">Безопасность</a>
+                    <a href="/auth/logout">Выход</a>
+                </div>
+            </div>
+        </header>
+      </aside>
+      <div class="container">
+          <header class="header">
+              <form id="search-form">
+                  <input type="text" id="user-search" class="search-input" placeholder="Поиск пользователей...">
+                  <button type="submit" class="invite-button">Отправить приглашение</button>
+              </form>
+          </header>
+          <section class="friends-list-section">
+              <div class="friends-list-header">Друзья</div>
+          </section>
+      </div>
+      <aside class="right-sidebar">
+        <header class="right-sidebar-header">
+            <div class="invitation-dropdown">
+                <button class="invitation-dropbtn">Приглашения</button> 
+                <div class="invitation-dropdown-content">
+                    <button id="sent-button">Отправленные</button>
+                    <button id="recevied-button">Полученные</button>
+                </div>
+            </div>
+        </header>
+        <div class="invitations-list"></div>
+      </aside>
+    </div>
+  </body>
+  

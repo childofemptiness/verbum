@@ -15,46 +15,90 @@ body, html {
 
 .sidebar {
     width: 300px;
-    background-color: #ededed;
+    background-color: #2a2a2a; /* Dark grey/black */
     overflow-y: auto;
-    border-right: 1px solid #ddd;
-    background-color: black;
+    border-right: 1px solid #333; /* Slightly lighter grey for the border */
 }
 
 .sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid #ddd;
-    text-align: center;
+    display: flex;
+    align-items: center;
 }
 
-.user-image {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-bottom: 10px;
+/* Стили для выпадающего меню */
+.dropdown {
+    position: relative;
+    display: inline-block;
+    margin-right: auto; /* Добавляет автоматический отступ, чтобы user-info шёл сразу за кнопкой */
+}
+
+.user-info {
+    display: flex;
+    align-items: center; /* Выравнивание иконки и текста по центру по вертикали */
 }
 
 .user-name {
-    margin: 0;
-    font-size: 1.2em;
-    color: #ccc;
+    margin-right: 10px;
+    color:white;
+    margin-left: 5px;
 }
 
-.conversations {
-    padding: 10px;
+
+#user-icon {
+    color: grey;
+    font-size: 25px;
 }
+
+.dropbtn {
+    margin: 10px;
+    background-color: #2a2a2a;
+    color: white;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    border-radius: 15px;
+}
+
+.dropdown-content {
+    margin-top: 10px;
+    margin-left: 10px;
+    display: none;
+    position: absolute;
+    background-color: rgba(42, 42, 42, 0.8);
+    /* background-color: white; */
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    z-index: 1;
+    left: 0; /* Выравниваем по левому краю гамбургера */
+}
+
+.dropdown-content a {
+    color: white;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    border-radius: 10px;
+}
+
+.dropdown-content a:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
 
 .conversation {
+    height: 60px;
     padding: 10px 15px;
-    border-bottom: 2px solid #f2f2f2;
-    border-radius: 7px;
+    border-bottom: 2px solid #333;
     cursor: pointer;
     transition: background-color 0.3s;
-    background-color: blueviolet;
+    color: #ffffff; /* White text for the conversation items */
+    background-color: #1a1a1a; /* Same as sidebar bg color for consistency */
 }
 
-.conversation:hover, .conversation.active {
-    background-color: #d8d8d8;
+.conversation:hover, .conversation:active {
+    background-color: #2d2d2d; /* Slightly lighter bg on hover/active for subtle interaction feedback */
 }
 
 .chat-area {
@@ -67,27 +111,31 @@ body, html {
     flex-grow: 1;
     padding: 20px;
     overflow-y: auto;
-    background-image: url('/public/img/y10n_fpni_211014.jpg');
-    background-size: 600px 600px;
+    background-color: #121212; /* Dark bg to match the overall minimalistic and dark theme */
+    color: #eee; /* Light text color for readability */
 }
 
 .message-form {
     padding: 20px;
-    background-color: rgba(0, 0, 255, 0.5);
-    border-top: 1px solid #ddd;
+    background-color: #222; /* Slightly lighter than message area bg */
+    border-top: 1px solid #333;
 }
 
 .message-form input[type="text"] {
     width: calc(100% - 100px);
     padding: 10px;
     margin-right: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #3b3b3b; /* Dark border for input */
+    background-color: #2d2d2d; /* Slightly lighter bg for input */
+    color: #ccc; /* Light grey text for input */
+    border-radius: 7px;
 }
 
 .message-form button {
     padding: 10px 20px;
-    color: white;
-    background-color: grey;
+    color: #e0e0e0; /* Light grey text for button */
+    background-color: #0a84ff; /* Pop of blue to bring attention to the button */
     border: none;
+    border-radius: 7px;
     cursor: pointer;
 }

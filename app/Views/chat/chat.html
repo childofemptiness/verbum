@@ -1,0 +1,37 @@
+<body>
+    <aside class="left-sidebar">
+        <header class="left-sidebar-header">
+            <div class="dropdown">
+                <button class="menu-dropbtn">☰</button> <!-- Используются три горизонтальные полосы -->
+                <div class="dropdown-menu-content">
+                    <a href="/main/home">Главная</a>
+                    <a href="#">Профиль</a>
+                    <a href="/friends/home">Друзья</a>
+                    <a href="#">Безопасность</a>
+                    <a href="/auth/logout">Выход</a>
+                </div>
+            </div>
+            <!-- остальная часть боковой колонки -->
+            <div class="user-info">
+                <i id="user-icon" class='bx bx-user-circle'></i>
+                <div class="user-friend-id"></div>
+            </div>
+        </header>
+    </aside>
+    <div class="chat-container">
+        <header class="chat-header">
+            <h1>Имя собеседника или название группы</h1>
+            <button class="chat-menu">⋮</button>
+        </header>
+        <main class="chat-messages">
+            <!-- Сообщения будут добавляться здесь -->
+        </main>
+        <footer class="chat-footer">
+            <input type="text" placeholder="Написать сообщение..." class="chat-input">
+            <button class="chat-send">Отправить</button>
+        </footer>
+    </div>
+    <footer class="app-footer">
+        <p>Verbum App, 2023</p>
+    </footer>
+</body>
