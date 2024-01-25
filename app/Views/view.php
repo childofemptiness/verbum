@@ -205,4 +205,3 @@ class View {
     echo $view_name;
   }
 }
-?>

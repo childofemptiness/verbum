@@ -11,4 +11,3 @@ $uri = filter_var($_SERVER["REQUEST_URI"], FILTER_SANITIZE_URL);
 if (session_id() == '')session_start();
 
 require_once(ROOT . DS . "core" . DS . "core.php");
-

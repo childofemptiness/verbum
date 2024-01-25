@@ -48,5 +48,3 @@ class Controller extends Application {
   //   return $this->view;
   // }
 }
-
-?>

@@ -136,5 +136,3 @@ class DbModel {
     return $this->pdo->lastInsertId();
   }
 }
-
-

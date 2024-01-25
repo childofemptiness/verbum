@@ -20,5 +20,3 @@ define ("DEFAULT_METHOD", "home");
 define ("NOT_FOUND", "notfound");
 define("AUTHORIZE_CONTROLLER", "Auth");
 define("AUTHORIZE_METHOD", "loginpage");
-
-

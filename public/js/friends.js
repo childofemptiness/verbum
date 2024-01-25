@@ -1,7 +1,7 @@
 let invitationsList;
 
 document.addEventListener('DOMContentLoaded', function() {
-
+    
     getFriendsList();
     // Использование функции getUserid
     getUserId().then((id) => {
@@ -27,24 +27,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Выпадающее меню левого сайдбара
 
-var dropdownMenu = document.querySelector('.dropdown');
+var dropdownMenu = document.querySelector('.menu-dropbtn');
 var dropdownMenuContent = document.querySelector('.dropdown-menu-content');
-
 
 dropdownMenu.addEventListener('click', function(event) {
     // Этот код переключает видимость выпадающего меню
     dropdownMenuContent.style.display = dropdownMenuContent.style.display === 'block' ? 'none' : 'block';
+    
+    // Предотвращаем дальнейшее распространение события вверх по DOM дереву
     event.stopPropagation();
 });
 
 // Закрывает выпадающее меню, когда кликают вне его
-window.onclick = function(event) {
-    if (!event.target.matches('.menu-dropbtn')) {
-        if (!dropdown.contains(event.target)) {
-            dropdownContent.style.display = 'none';
-        }
+window.addEventListener('click', function(event) {    
+    if (!event.target.matches('.menu-dropbtn') && !event.target.matches('.dropdown *')) {
+        dropdownMenuContent.style.display = 'none';
     }
-};
+});
+
 
 // Выпадающиее меню правого сайдбара
 
@@ -60,7 +60,7 @@ dropdownInvitation.addEventListener('click', function(event) {
 
 // Закрывает выпадающее меню, когда кликают вне его
 window.onclick = function(event) {
-    if (!event.target.matches('.invitation-dropbtn')) {
+    if (!event.target.matches('invitation-dropbtn')) {
         if (!dropdownInvitation.contains(event.target)) {
             dropdownInvitationContent.style.display = 'none';
         }
@@ -315,6 +315,3 @@ function displayFriendsList(friends) {
     container.appendChild(header);
     container.appendChild(ul);
   }
-  
-
-  
