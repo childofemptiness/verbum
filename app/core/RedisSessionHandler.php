@@ -31,6 +31,7 @@ class RedisSessionHandler implements SessionHandlerInterface {
         unset($this->redis);
         return true;
     }
+    #[\ReturnTypeWillChange]
     public function read($id) :bool|string {
        $id = $this->prefix . $id;
        $sessData = $this->redis->get($id);
@@ -50,6 +51,7 @@ class RedisSessionHandler implements SessionHandlerInterface {
         $this->redis->del($id);
         return true;
     }
+    #[\ReturnTypeWillChange]
     public function gc($max_lifetime) :bool {
         return true;
     }

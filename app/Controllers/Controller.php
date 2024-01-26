@@ -37,8 +37,7 @@ class Controller extends Application {
   protected function get_model() {
     if (isset($this->model[$this->model_name]) && is_object($this->model[$this->model_name])) {
       return $this->model[$this->model_name];
-    }     
-    
+    }      
     return false;      
   }
 

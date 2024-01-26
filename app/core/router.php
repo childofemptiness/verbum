@@ -12,23 +12,29 @@ class Router {
 
     private $httpMethod;
     private $uri;
-    
     private $controller_name;
     private $method_name;
+    private $urlArray;
     public function __construct($httpMethod, $uri) {
         $this->httpMethod = $httpMethod;
         $this->uri = $uri;
-        $url_array = explode('/', $this->uri);
-        $this->controller_name = $url_array[1];
-        $this->method_name = empty($url_array[2]) ? '' : $url_array[2];
+        $this->urlArray = explode('/', $this->uri);
+        $this->controller_name = $this->urlArray[1];
+        $this->method_name = empty($this->urlArray[2]) ? '' : $this->urlArray[2];
         $this->helper = new HelperFunctions();
         $this->dispatcher = \FastRoute\simpleDispatcher(function(RouteCollector $r) {
-            // Если активация аккаунта, то обрабатываем маршрут с токеном
-            if (strpos($this->uri, 'activation') !== false) {
-                $r->addRoute('GET', '/auth/activation/{token}', 'Auth@activation'); 
-            } else {
-            $r->addRoute($this->httpMethod, $this->uri, ucfirst($this->controller_name)  . '@' . $this->method_name);
+            switch($this->urlArray[2]) {
+                case 'sendinterlocutorinfo':
+                    $r->addRoute($this->httpMethod, '/chats/sendinterlocutorinfo/{id:\d+}', 'Chats@sendinterlocutorinfo');
+                    break;
+                case 'activation':
+                    $r->addRoute($this->httpMethod, '/auth/activation/{token:[^/]+}', 'Auth@activation');
+                    break;
+                default:
+                    $r->addRoute($this->httpMethod, $this->uri, ucfirst($this->controller_name)  . '@' . $this->method_name);
+                    break;
             }
+           
         });
     }
 

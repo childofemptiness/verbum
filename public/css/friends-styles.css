@@ -317,3 +317,20 @@ body {
     background-color: #4caf50;
     color: white;
   }
+
+
+
+  /* Медиа-запрос для изменения стилей при ширине окна 600px и меньше */
+@media screen and (max-width: 850px) {
+    .left-sidebar {
+        width: 60px; /* Примерная ширина кнопки */
+        /* Убедитесь, что у кнопки есть соответствующий класс или адаптируйте селектор */
+        .button-class {
+            display: block; /* или "inline-block" в зависимости от желаемого отображения */
+        }
+    }
+
+    .container {
+        margin-left: 50px; /* Новая ширина .left-sidebar */
+    }
+}

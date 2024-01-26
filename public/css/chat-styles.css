@@ -8,6 +8,7 @@ body, button, input {
 
 /* Left Sidebar */
 
+/* Базовый стиль для .left-sidebar и .chat-container */
 .left-sidebar {
     width: 250px;
     position: fixed;
@@ -15,7 +16,10 @@ body, button, input {
     top: 0;
     bottom: 0;
     background-color: #2a2a2a;
-    flex-basis: 20%;
+    border: 1px solid #1a1a1a;
+    border-top: none;
+    /* Сделайте кнопку видимой, если она скрыта, когда .left-sidebar уменьшится */
+    overflow: auto;
 }
 
 
@@ -87,7 +91,8 @@ body, button, input {
 }
 
 .chat-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+    margin-left: 300px;
 }
 
 .chat-menu {
@@ -99,9 +104,12 @@ body, button, input {
 }
 
 .chat-messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    height: 100%;
+    overflow-y: scroll;
+    background-color: #1a1a1a;
 }
 
 .chat-footer {
@@ -150,3 +158,171 @@ body, button, input {
 .chat-input:focus, .chat-send:focus {
     outline: 2px solid #555;
 }
+
+/* Message Styles */
+
+.message {
+    position: relative;
+    padding: 7px 10px 5px 30px;
+    margin: 10px 0;
+    border-radius: 10px;
+    color: #fff; /* Цвет текста сообщений */
+    max-width: 100%; /* максимальная ширина сообщения */
+    word-wrap: break-word; /* перенос слов, если они не помещаются */
+    background-attachment: fixed;
+}
+
+/* Стили для исходящих сообщений (выравнивание и фон) */
+.message-outgoing {
+    align-self: flex-end;
+    background-image: linear-gradient(to bottom, #d4a241, #ef4b42, #8b599e);
+    right: 15px;
+    /* clip-path: url(#clip-outgoing); */
+}
+
+
+/* Стили для входящих сообщений (выравнивание и фон) */
+.message-incoming {
+    align-self: flex-start;
+    background-image: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d);
+    left: 15px;
+    /* clip-path: url(#clip-incoming); */
+}
+
+
+
+p.message-text, p.reply-message {
+    margin: 0;
+    margin-left: 20px;
+}
+
+p.message-time {
+    position: absolute;
+    margin: 0 0 3px -20px;
+    font-size: 12px;
+    font-weight: bold;
+    color: mediumblue;
+    width: 40px;
+    bottom: 0.5px;
+}
+.reply p.message-time {
+    margin-left: -42px;
+}
+/* Медиа-запрос для изменения стилей при ширине окна 600px и меньше */
+@media screen and (max-width: 850px) {
+    .left-sidebar {
+        width: 60px; /* Примерная ширина кнопки */
+        /* Убедитесь, что у кнопки есть соответствующий класс или адаптируйте селектор */
+        .button-class {
+            display: block; /* или "inline-block" в зависимости от желаемого отображения */
+        }
+    }
+
+    .chat-container {
+        margin-left: 50px; /* Новая ширина .left-sidebar */
+    }
+}
+
+/* Контекстное меню над кнопкой */
+
+.context-menu {
+    background-color: #0084ff;
+    border-radius: 7px;
+    overflow: hidden;
+    position: absolute; /* позиционируем меню относительно ближайшего родителя с position, отличным от static */
+    z-index: 1000; /* чтобы показывалось поверх других элементов */
+    display: flex; /* по умолчанию меню скрыто */
+  }
+  
+  .context-menu button {
+    font-size: 15px;
+    width: 100%;
+    height: 26px;
+    padding: 2px 8px;
+    margin: 0;
+    border: none;
+    display: block; /* кнопки будут идти вертикально, каждая на новой строке */
+    background-color: #0084ff;
+    cursor: pointer;
+  }
+
+  .context-menu button:hover {
+    background-color: #0044cc;
+  }
+
+  
+  .reply-quote, .edit-quote {
+    display: block;
+    text-align: left;
+    padding: 5px 10px; /* Пример отступов */
+    border-left: 3px solid #ccc; /* Добавляем линию для имитации стиля Telegram */
+    color: white; /* Цвет текста */
+    background-color: #333; /* Фон блока */
+}
+
+button.cancel-reply {
+    font-size: 20px;
+    border: none;
+    background: none;
+    position: absolute;
+    right: 20px;
+}
+
+
+
+  .reply {
+    margin-left: 20px; /* Сдвиг ответа правее, чтобы выглядело приклеенным */
+    padding-top: 0; /* Уменьшаем отступ сверху для ответа */
+}
+
+.reply-indicator {
+    background-color: rgba( 66,170,255, 0.6);
+    border-left: 3px solid #5b6d88;
+    padding: 5px;
+    margin: 0 0 5px -20px; /* Отрицательный margin для сдвига индикатора */
+    border-radius: 5px;
+    height: 29px;
+}
+
+.reply-author {
+    font-weight: bold;
+    display: block;
+    font-size: 14px;
+    color: black;
+}
+
+blockquote {
+    /* background: inherit; */
+    margin: 0;
+    font-style: italic;
+    color: #0D1418;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+
+
+/* Класс для анимации подсветки */
+.highlight {
+    /* начальный цвет подсветки */
+    background-color: yellow;
+    /* анимация исчезновения подсветки */
+    animation: fadeOutHighlight 3s forwards;
+  }
+  
+  /* Ключевые кадры для анимации исчезновения подсветки */
+  @keyframes fadeOutHighlight {
+    0% {
+      background-color: yellow;
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+  
+
+
+
+  

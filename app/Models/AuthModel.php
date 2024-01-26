@@ -19,7 +19,6 @@ class AuthModel extends DbModel {
 
         $enteredUserName = $requestData['username'];
         $enteredPassword = $requestData['password'];
-
         $userId = $this->usersModel->getUserId($enteredUserName);
         $response = $this->authenticate($userId, $enteredPassword);
 

@@ -92,7 +92,6 @@ formElement.addEventListener('submit', function(event) {
 });
 
 async function sendFriendRequest(tag) {
-    console.log(tag);
     const response = await fetch('/friends/setfriendrequest', {
         method: 'POST',
         headers: {
@@ -111,7 +110,7 @@ async function sendFriendRequest(tag) {
 // Получение id пользователя для тэга
 
 async function getUserId() {
-    const response = await fetch('/friends/getuserid'); // Используем await для ожидания ответа от fetch
+    const response = await fetch('/friends/senduserid'); // Используем await для ожидания ответа от fetch
     if (!response.ok) {
         throw new Error('Network response was not ok');
     }
@@ -164,7 +163,7 @@ async function getFriendsList() {
         console.error('Произошла ошибка:', error);
     }
 }
-
+// РЕФАКТОРИНГ: ПОМЕНЯТЬ POST НА GET, тэг передавать через GET -------------------------------------------------------------------------------------------------------
 async function sendFriendTagToDelete(tag) {
     try {
         const response = await fetch(`/friends/getfriendtagtodelete`, {
@@ -178,6 +177,30 @@ async function sendFriendTagToDelete(tag) {
         console.error('Произошла ошибка:', error);
     }
 }
+
+async function getDialogId(tag) {
+    try {
+        const response = await fetch(`/chats/senddialogid`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application-json',
+            },
+            body: JSON.stringify({tag: tag})
+        });
+
+        if (!response.ok) { // Проверка на успешный ответ от сервера
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+
+        return data;
+
+    }   catch (error) {
+        console.log('Произошла ошибка', error);
+    }
+}
+
 
 function createInvitationItem(invitation, type) {
     const item = document.createElement("div");
@@ -297,8 +320,16 @@ function displayFriendsList(friends) {
       const messageButton = document.createElement('button');
       messageButton.textContent = 'Написать';
       messageButton.className = 'button button-message';
-      // Добавьте здесь подходящий обработчик для кнопки "Написать"
-      // ЗДЕСЬ БУДЕТ ПЕРЕХОД В ЧАТ МЕЖДУ ПОЛЬЗОВАТЕЛЕМ И ЕГО ДРУГОМ
+
+      messageButton.onclick = function(event) {
+        getDialogId(friend.tag).then((dialogId) => {
+            console.log(dialogId);
+            window.location.href = `/chats/dialog/${dialogId}`;
+        }).catch((error) => {
+            console.error('Failed to fetch  chatId:', error);
+        });
+      }
+      
       // Собираем элемент списка с информацией и кнопками
       li.appendChild(nameSpan);
       li.appendChild(tagSpan);

@@ -1,49 +1,582 @@
-// // Отслеживаем установление соединения
-// socket.addEventListener('open', function(event) {
-//     console.log('Connected to server.');
-//     updateConnectionStatus('Connected'); // добавляем функцию для обновления статуса
-// });
+var interlocutorData;
+var userId;
+var dialogId;
+let messageData = new Map();
+let originalMessageId = null;
+let editMessageId = null;
 
-// // Отслеживаем получение сообщения
-// socket.addEventListener('message', function(event) {
-//     const messages = document.getElementById('messages');
-//     const message = document.createElement('div');
-//     message.innerHTML = event.data;
-//     console.log(event.data);
-//     messages.appendChild(message);
-// });
+const path = window.location.pathname;
+const segments = path.split('/');
+const dialogIndex = segments.indexOf('dialog');
+dialogId = (dialogIndex !== -1 && segments[dialogIndex + 1]) ? segments[dialogIndex + 1] : null;
 
-// // Обработка закрытия соединения
-// socket.addEventListener('close', function(event) {
-//     console.log('Disconnected from server');
-//     updateConnectionStatus('Disconnected'); // обновляем статус при закрытии соединения
-// });
+document.addEventListener('DOMContentLoaded', function() {
+    
+    
+    getUserId().then((id) => {
+        localStorage.setItem('userId', id);
+    });
 
-// // Обработка ошибок WebSocket соединения
-// socket.addEventListener('error', function(event) {
-//     console.log('Error: connection failed');
-//     updateConnectionStatus('Error'); // обновляем статус при ошибке соединения
-// });
+    userId = localStorage.getItem('userId');
 
-// const form = document.querySelector('form');
-// const input = document.querySelector('input');
+    getInterlocutorInfo(dialogId, setInterlocutorInfo).then((data) => {
+        interlocutorData = data;
+    });
 
-// // Отправка сообщений формы
-// form.addEventListener('submit', function(event) {
-//     event.preventDefault();
+    if (socket) {
+        socket.addEventListener('open', function(event) {
+            console.log('Connected to server.');
+    
+            if (path.includes('dialog') && dialogId) {
+                fetchDialogHistory(dialogId);
+            }
+        });
+    }
 
-//     // Проверяем, если соединение открыто перед отправкой
-//     if (socket.readyState === WebSocket.OPEN) {
-//         const message = input.value;
-//         socket.send(message);
-//         input.value = ''; // Очищаем поле ввода после отправки
-//     } else {
-//         console.log('Cannot send message: WebSocket is not connected.');
-//         updateConnectionStatus('Not Connected'); // обновляем статус, если соединение не установлено
-//     }
-// });
+   
+});
 
-// // Функция для обновления статуса соединения на странице
-// function updateConnectionStatus(status) {
-//     console.log(status);
-// }
+
+var token = localStorage.getItem('userToken');
+var encodedToken = encodeURIComponent(token);
+var encodedSessionId = encodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)PHPSESSID\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
+const socket = new WebSocket(`ws://localhost:8081/ws?token=${encodedToken}&phpsessid=${encodedSessionId}&chatId=${dialogId}`);
+
+socket.addEventListener('message', function(event) {
+    const data = JSON.parse(event.data);
+    handleSocketMessage(data);
+});
+
+socket.addEventListener('close', function(event) {
+    console.log('Disconnected from server');
+});
+
+socket.addEventListener('error', function(event) {
+    console.log('Error: connection failed');
+});
+
+const inputElement = document.querySelector('.chat-input');
+const sendButton = document.querySelector('.chat-send');
+// Отправка сообщения по нажатию на кнопку    
+sendButton.addEventListener('click', function() {
+    if (socket.readyState === WebSocket.OPEN) {
+        handleMessageSend();
+    } else {
+        console.log('Cannot send message: WebSocket is not connected.');
+    }
+});
+// Отправка сообщения по нажатию на клавишу Enter
+document.addEventListener('keydown', function(event) {
+    if (inputElement.value != '' && event.code == 'Enter' && socket.readyState === WebSocket.OPEN) {
+       handleMessageSend();
+    }
+});
+
+
+// Нажатие правой кнопкой по мыши
+const chatContainer = document.querySelector('.chat-messages');
+chatContainer.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+
+   removeExistingMenu();
+
+    const messageDiv = event.target.closest('.message');
+    if(!messageDiv) return;
+    if(document.getElementById('contextMenu')) {
+    }
+    //Создаем контекстное меню на основе шаблона
+    const contextMenu = createContextMenu(Number(messageDiv.dataset.id));
+    
+    positionContextMenu(event.pageX, event.pageY, contextMenu);
+
+    document.body.appendChild(contextMenu);
+});
+
+document.addEventListener('click', function(event) {
+    // проверить, что клик был сделан вне элемента .message
+    if (!event.target.matches('.message') && !event.target.matches('.context-menu')) {
+        // получить возможное существующее контекстное меню
+        const contextMenu = document.querySelector('.context-menu');
+        if (contextMenu) {
+            // вызвать функцию для удаления контекстного меню
+            removeExistingMenu();
+        }
+    }
+});
+
+
+
+
+var dropdownMenu = document.querySelector('.menu-dropbtn');
+var dropdownMenuContent = document.querySelector('.dropdown-menu-content');
+
+dropdownMenu.addEventListener('click', function(event) {
+    // Этот код переключает видимость выпадающего меню
+    dropdownMenuContent.style.display = dropdownMenuContent.style.display === 'block' ? 'none' : 'block';
+    
+    // Предотвращаем дальнейшее распространение события вверх по DOM дереву
+    event.stopPropagation();
+});
+
+// Закрывает выпадающее меню, когда кликают вне его
+window.addEventListener('click', function(event) {    
+    if (!event.target.matches('.menu-dropbtn') && !event.target.matches('.dropdown *')) {
+        dropdownMenuContent.style.display = 'none';
+    }
+});
+
+function handleMessageSend() {
+
+    if (editMessageId != null) {
+
+        body = {
+            'type': 'edit-message',
+            messageId: editMessageId,
+            dialogId: dialogId,
+            takerId: interlocutorData.id,
+            text: inputElement.value,
+        };
+
+        sendSocketMessage(body);
+
+        const messageElement = document.getElementById(`message-${editMessageId}`);
+        const replyElement = messageElement.querySelector('.reply');
+
+        if (replyElement) {
+            const messageDiv = replyElement.querySelector('.reply-message');
+            messageDiv.textContent = inputElement.value; 
+        }
+        else {
+            const messageP = messageElement.querySelector('.message-text');
+            messageP.textContent = inputElement.value;
+        }
+        // Очищаем поле ввода
+        inputElement.value = '';
+        // В будущем подумать на тем, чтобы добавить подпись изменено ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // Меняем текущее время приложения
+        const messageTimeP = messageElement.querySelector('.message-time');
+        var currentTime = new Date();
+        var hours = toTwoDigits(currentTime.getHours());
+        var minutes = toTwoDigits(currentTime.getMinutes());
+        messageTimeP.innerHTML = hours + ':' + minutes;
+
+        const editQuoteElement = document.querySelector('.edit-quote');
+        if (editQuoteElement) editQuoteElement.remove();
+
+        editMessageId = null;
+
+    } else {
+
+        body = {
+        type: 'dialog-message',
+        messageId: null,
+        text: inputElement.value,
+        takerId: interlocutorData.id,
+        dialogId: dialogId,
+        sendDate: new Date(),
+        // Если сломается, раскомментируй нижнюю строку ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+         senderId: userId,
+        };
+
+        body = addMessageToDOM(body, true);
+
+        sendSocketMessage(body);
+
+        inputElement.value = '';
+        const replyQuoteElement = document.querySelector('.reply-quote');
+        if (replyQuoteElement) replyQuoteElement.remove();
+    }
+}
+
+
+// Отправка всех видов сообщений через сокет
+function sendSocketMessage(body) {
+
+    data = JSON.stringify(body);    
+
+    socket.send(data);
+}
+
+// Запрос на получение истории сообщений
+function fetchDialogHistory(dialogId) {
+    body = {
+        type: 'dialog-history',
+        dialogId: dialogId,
+    };
+
+    data = JSON.stringify(body);
+
+    socket.send(data);
+}
+
+
+
+// Получить информацию о собеседнике
+async function getInterlocutorInfo(dialogId, callback) {
+
+    try {
+        const response = await fetch(`/chats/sendinterlocutorinfo/${dialogId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data =  await response.json();
+        callback(data);
+        return data;
+    }
+
+    catch (error) {
+        console.log('Произошла ошибка', error);
+    }
+}
+
+async function getUserId() {
+    const response = await fetch('/chats/senduserid'); // Используем await для ожидания ответа от fetch
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+    return await response.json(); // Ожидаем резолва Promise от response.json()
+}
+
+
+
+// Установить информацию о собеседнике
+function setInterlocutorInfo(info) {
+    const name = document.querySelector('.chat-header h1');
+    name.innerHTML = info.fullName + `(` + info.nick + `)`;
+}
+
+function handleSocketMessage(data) {
+    const chatContainer = document.querySelector('.chat-messages');
+    switch(data.type) {
+        // Обработка случая, когда получено сообщение
+        case 'dialog-message':
+            addMessageToDOM(data, false);
+            break;
+        // Обработка случая, когда получена история сообщений
+        case 'dialog-history':
+            let messageHistory = data.messages;
+            messageHistory.forEach(message => {
+                addMessageToDOM(message, message.senderId == userId);
+            });
+            break;
+        // После отправки сообщения на сервер, получаем его id и кладем в dataset последнего показанного сообщения. Такой кейс приходит только отправителю сообщению, потому можно не опасаться ошибок с собеседником
+        case 'messageId':
+            const lastUserMessage = chatContainer.lastChild;
+            lastUserMessage.dataset.id = data.messageId;
+            lastUserMessage.id = `message-${data.messageId}`;
+            if (messageData.has(0)) {
+                let value = messageData.get(0);
+                value.messageId = Number(data.messageId);
+                messageData.delete(0);
+                messageData.set(Number(data.messageId), value);
+            }
+            break;
+        // Удаляем отображаем элемент сообщения у клиента
+        case 'delete-message':
+            const messageDiv = document.getElementById(`message-${data.messageId}`);
+            messageDiv.remove();
+            break;
+        // Меняем содержимое нашего сообщения у клиента
+        case 'edit-message':
+            const messageElement = document.getElementById(`message-${data.messageId}`);
+            const replyElement = messageElement.querySelector('.reply');
+            if(replyElement) {
+                const messageDiv = replyElement.querySelector('.reply-message');
+                messageDiv.textContent = data.text;
+            }
+            else {
+                const messageP = messageElement.querySelector('.message-text');
+                messageP.textContent = data.text;
+            }
+            // Меняем время сообщения на текущее
+            const messageTimeP = messageElement.querySelector('.message-time');
+            var currentTime = new Date();
+            var hours = toTwoDigits(currentTime.getHours());
+            var minutes = toTwoDigits(currentTime.getMinutes());
+            messageTimeP.innerHTML = hours + ':' + minutes;
+
+            break;
+    }
+}
+
+// Модификация функции addMessageToDOM для отображения ответов
+function addMessageToDOM(data, isOutGoing) {
+    const messagesElement = document.querySelector('.chat-messages');
+    
+    // Создание общего div для сообщения или ответа
+    const messageWrapperDiv = document.createElement('div');
+    messageWrapperDiv.classList.add('message');
+    if (isOutGoing) {
+        messageWrapperDiv.classList.add('message-outgoing');
+    } else {
+        messageWrapperDiv.classList.add('message-incoming');
+    }
+
+
+    // Проверяем, является ли сообщение ответом
+    if (originalMessageId ||  data['parentMessageId'] != null) {
+        if (originalMessageId) {
+
+            data['parentMessageId'] = originalMessageId;
+        }
+        else {
+            originalMessageId = data['parentMessageId'];
+        }
+        // Создание индикатора ответа
+        const replyIndicatorDiv = document.createElement('div');
+        replyIndicatorDiv.classList.add('reply-indicator');
+        const replyAuthorSpan = document.createElement('span');
+        replyAuthorSpan.classList.add('reply-author');
+        replyAuthorSpan.textContent = isOutGoing ? 'Вы' : interlocutorData.nick; // Тут указываем имя пользователя или другую информацию
+        const blockquote = document.createElement('blockquote');
+        blockquote.textContent = messageData.get(originalMessageId).text; // Тут указываем цитируемый текст
+
+        // Добавляем обработчик нажатия на блок цитаты, чтобы перейти к оригинальному сообщению
+        blockquote.addEventListener('click', function() {
+            const originalMessageElement = document.getElementById(`message-${data['parentMessageId']}`);
+            if (originalMessageElement) {
+                originalMessageElement.scrollIntoView({behavior: 'smooth', block: 'center'});
+                // Добавляем класс для подсветки
+                originalMessageElement.classList.add('highlight');
+
+                // Удаляем подстветку по истечении некоторого срока
+                setTimeout(() => {
+                    originalMessageElement.classList.remove('highlight');
+                }, 3000);
+
+            }
+        });
+        // Сборка индикатора ответа
+        replyIndicatorDiv.appendChild(replyAuthorSpan);
+        replyIndicatorDiv.appendChild(blockquote);
+        
+        // Создание div для сообщения-ответа
+        const replyMessageDiv = document.createElement('div');
+        replyMessageDiv.classList.add('reply');
+
+        // Создание элемента p для текста сообщения
+        const replyMessageP = document.createElement('p');
+        replyMessageP.classList.add('reply-message');
+        replyMessageP.textContent = data.text;
+
+
+        // Сборка сообщения-ответа
+        replyMessageDiv.appendChild(replyIndicatorDiv);
+        replyMessageDiv.appendChild(replyMessageP);
+
+
+        let messagaeSendDate = new Date(data.sendDate);
+        const messageTime = document.createElement('p');
+        messageTime.innerHTML = messagaeSendDate.getHours() + ':' + messagaeSendDate.getMinutes();
+        messageTime.classList.add('message-time');
+        replyMessageDiv.appendChild(messageTime);
+
+        // Добавление сообщения-ответа в общий div
+        messageWrapperDiv.appendChild(replyMessageDiv);
+
+        // Очистка переменной с текстом оригинального сообщения
+        originalMessageId = null;
+
+    } else {
+        // Создание элемента p для текста обычного сообщения
+        const messageP = document.createElement('p');
+        messageP.classList.add('message-text');
+        messageP.textContent = data.text;
+  
+        let messageSendTime = new Date(data.sendDate);
+        var hours = toTwoDigits(messageSendTime.getHours());
+        var minutes = toTwoDigits(messageSendTime.getMinutes());
+
+        const messageTimeP = document.createElement('p');
+        messageTimeP.classList.add('message-time');
+        messageTimeP.innerHTML = hours + ':' + minutes;
+
+        messageWrapperDiv.appendChild(messageP);
+        messageWrapperDiv.appendChild(messageTimeP);
+    }
+
+    // Назначение id сообщению
+    if (data.messageId) {
+        messageWrapperDiv.id = `message-${data.messageId}`;
+        messageWrapperDiv.dataset.id = data.messageId;
+    }
+
+    // Добавление всего сообщения или ответа в контейнер чата
+    messagesElement.appendChild(messageWrapperDiv);
+
+    // Прокрутка к последнему сообщению
+    messagesElement.scrollTop = messagesElement.scrollHeight;
+    // Связываем DOM элемент сообщения с его данными, если нужно
+     if (!messageData.has(data.messageId)) messageData.set(Number(data.messageId), data);
+
+    return data;
+}
+
+// Нужна для отображения времени отправки сообщения в виде 20:05, а не 20:5
+function toTwoDigits(num) {
+    return num.toString().padStart(2, '0');
+}
+
+// Функция для создания контекстного меню
+function createContextMenu(messageId) {
+
+    const contextMenu = document.createElement('div');
+    contextMenu.classList.add('context-menu');
+
+    if (messageData.get(messageId).senderId == userId) {
+      contextMenu.appendChild(createActionButton('delete', () => deleteMessage(messageId)));
+      contextMenu.appendChild(createActionButton('edit', () => editMessage(messageId)));
+    }
+  
+    contextMenu.appendChild(createActionButton('reply', () => replyToMessage(messageId)));
+    return contextMenu;
+  }
+
+  // Функция для позиционирования контекстного меню
+  function positionContextMenu(x, y, menu) {
+    menu.style.left = `${x-10}px`;
+    menu.style.top = `${y-40}px`;
+  }
+  
+  // Функция для удаления существующего контекстного меню
+function removeExistingMenu() {
+    const existingMenu = document.querySelector('.context-menu');
+    if (existingMenu) {
+      existingMenu.remove(); // Удаляем существующее контекстное меню
+    }
+  }
+
+  // Функция для создания кнопки действия
+function createActionButton(text, action) {
+    const button = document.createElement('button');
+    button.classList.add('context-menu-button');
+    const icon = document.createElement('i');
+  
+    switch (text) {
+      case 'delete':
+        icon.className = 'fa fa-trash';
+        button.appendChild(icon);
+        button.onclick = (event) => {
+          action();
+          removeExistingMenu();
+        };
+        break;
+  
+      case 'reply':
+        icon.className = 'fa solid fa-reply';
+        button.appendChild(icon);
+        button.onclick = (event) => {
+          action();
+          removeExistingMenu();
+        };
+        break;
+      
+      case 'edit':
+        icon.className = 'fa-solid fa-pen-to-square';
+        button.appendChild(icon);
+        button.onclick = (event) => {
+          action();
+        };
+        break;
+    }
+    return button;
+  }
+
+
+// Функция удаления сообщения
+function deleteMessage(messageId) {
+
+    body = {
+        type: 'delete-message',
+        interlocutorId: interlocutorData.id,
+        messageId: messageId,
+        dialogId: dialogId,
+    };
+
+    sendSocketMessage(body);
+
+    const messageDiv = document.getElementById(`message-${messageId}`);
+    messageDiv.remove();
+}
+// Изменяем сообщение
+function editMessage(messageId) {
+
+    let originalMessageText = messageData.get(messageId).text;
+
+    // Создаем и вставляем цитату над полем ввода
+    if (!document.querySelector('.edit-quote')) {
+
+        editQuote = document.createElement('div');
+        editQuote.classList.add('edit-quote');
+    }   else {
+        editQuote = document.querySelector('.edit-quote');
+    }
+
+    const replyQuote = document.querySelector('.reply-quote');
+    if (replyQuote) replyQuote.remove();
+
+
+    // Мы предполагаем, что над .chat-footer находится .chat-input-container
+    const chatInputContainer = document.querySelector('.chat-container');
+    chatInputContainer.insertBefore(editQuote, chatInputContainer.querySelector('.chat-footer'));
+
+    // Заполнение элемента цитаты текстом оригинального сообщения и кнопкой отмены ответа
+    editQuote.innerHTML = `Редактирование: <span class="text-quote">${originalMessageText}</span> <button class="cancel-reply">
+        <i class="fa fa-times" style="color: #2E8B57; cursor: pointer;"></i>
+    </button>`;
+
+    // Добавление обработчика на нажатие кнопки "Отмена"
+    const cancelEditButton = editQuote.querySelector('.cancel-reply');
+    cancelEditButton.addEventListener('click', () => {
+        editQuote.remove();
+    });
+
+    // Переводим фокус на поле ввода текста
+    const inputField = document.querySelector('.chat-input');
+    inputField.focus();
+
+   editMessageId = messageId;
+
+}
+
+// Модификация функции replyToMessage для установки контекста ответа
+function replyToMessage(messageId) {
+
+    let originalMessageText = messageData.get(messageId).text;
+    originalMessageId = messageId;
+
+    let replyQuote;
+    // Создаем и вставляем цитату над полем ввода
+    if (!document.querySelector('.reply-quote')) {
+
+        replyQuote = document.createElement('div');
+        replyQuote.classList.add('reply-quote');
+    }
+
+    else {
+        replyQuote = document.querySelector('.reply-quote');
+    }
+
+    const editQuote = document.querySelector('.edit-quote');
+    if (editQuote) editQuote.remove();
+    
+    // Мы предполагаем, что над .chat-footer находится .chat-input-container
+    const chatInputContainer = document.querySelector('.chat-container');
+    chatInputContainer.insertBefore(replyQuote, chatInputContainer.querySelector('.chat-footer'));
+
+    // Заполнение элемента цитаты текстом оригинального сообщения и кнопкой отмены ответа
+    replyQuote.innerHTML = `Ответ на: <span class="text-quote">${originalMessageText}</span> <button class="cancel-reply">
+        <i class="fa fa-times" style="color: #2E8B57; cursor: pointer;"></i>
+    </button>`;
+
+    // Добавление обработчика на нажатие кнопки "Отмена"
+    const cancelReplyButton = replyQuote.querySelector('.cancel-reply');
+    cancelReplyButton.addEventListener('click', () => {
+        replyQuote.remove();
+        replyingToMessageId = null; // Очищаем контекст ответа
+    });
+
+    // Переводим фокус на поле ввода текста
+    const inputField = document.querySelector('.chat-input');
+    inputField.focus();
+}

@@ -12,10 +12,10 @@ class FriendsModel extends DbModel {
     }
 
     public  function setFriendRequest($data) {
-
+        echo 666;
         $takerTag = $data['tag'];
         $takerId = $takerTag - 666666;
-        $senderId = $this->getUserIdFromSession();
+        $senderId = 22;
 
         $query = 'SELECT COUNT(*) FROM friends WHERE (taker_id = :takerId1 AND sender_id = :senderId1) OR (taker_id = :senderId2 AND sender_id = :takerId2)';
         $params = [
@@ -24,12 +24,16 @@ class FriendsModel extends DbModel {
             'senderId2' => $senderId,
             'takerId2' => $takerId
         ];
+
         $matches = $this->get_query($query, $params)[0]['COUNT(*)'];
 
         if ($matches === 0) { 
+            echo 777;
             $query = 'INSERT INTO friends (sender_id, taker_id, is_accepted) VALUES (:senderId, :takerId, FALSE)';
             $params = ['takerId' => $takerId, 'senderId' => $senderId];
+            unset($_Ses['error']);
             $this->set_query($query, $params);
+            print_r($_SESSION['error']);
         }
     }
 
