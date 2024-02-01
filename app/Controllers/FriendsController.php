@@ -22,19 +22,19 @@ class FriendsController extends Controller {
         $this->get_model()->setFriendRequest($data);
     }
 
-    public function getuserid() {
+    public function senduserid() {
         $userId = $this->get_model()->getUserIdFromSession();
-        $this->helper->send_json($userId);
+        $this->helper->sendJson($userId);
     }
 
     public function getallsentrequests() {
         $requests = $this->get_model()->getAllSentRequests();
-        $this->helper->send_json($requests);
+        $this->helper->sendJson($requests);
     }
 
     public function getallreceivedrequests() {
         $requests = $this->get_model()->getAllReceivedRequests();
-        $this->helper->send_json($requests);
+        $this->helper->sendJson($requests);
     }
 
     public function getresponsetorequest() {
@@ -45,7 +45,7 @@ class FriendsController extends Controller {
 
     public function sendfriendslist() {
         $data = $this->get_model()->getFriendsList();
-        $this->helper->send_json($data);
+        $this->helper->sendJson($data);
     }
 
     public function getfriendtagtodelete() {

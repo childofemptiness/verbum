@@ -10,7 +10,7 @@ class HelperFunctions{
       exit(0);
     }
     // Функция для отправки json объекта
-    public static function send_json($data)
+    public static function sendJson($data)
     {
         header("Content-Type: application/json; charset=utf-8"); 
         echo json_encode($data, JSON_UNESCAPED_UNICODE);

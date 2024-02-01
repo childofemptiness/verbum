@@ -1,79 +1,25 @@
 <?php
 
 namespace App\Core;
+// РАЗОБРАТЬСЯ, ПОЧЕМУ НЕ РАБОТАЕТ АВТОЗАГРУЗКА
+define("DS", DIRECTORY_SEPARATOR);
+define("ROOT", dirname(__FILE__) . DS . "app");
 
-use Predis\Client;
-use Ratchet\MessageComponentInterface;
-use Ratchet\ConnectionInterface;
-use App\Core\RedisSessionHandler;
+require_once('../../vendor/autoload.php');
+require_once('../config/config.php');
+require_once('./WebSocketHandler.php');
 
-class WebSocketHandler implements MessageComponentInterface {
-    protected $clients;
-    protected $sessionHandler;
-    protected $session;
-    protected $queryParams;
-    protected $redis;
+use Ratchet\Server\IoServer;
+use Ratchet\Http\HttpServer;
+use Ratchet\WebSocket\WsServer;
 
-
-    public function __construct() {
-        $this->clients = new \SplObjectStorage;
-        $this->sessionHandler = new RedisSessionHandler();
-        $this->redis = new Client();
-    }
-
-    public function onOpen(ConnectionInterface $conn) {
-
-        $this->queryParams = $this->getKeysFromRequest($conn);
-
-        $sessionId = $this->queryParams['phpsessid'];
-
-        $this->session = $this->getSessionData($sessionId);
-
-        $clientToken = $this->queryParams['token'];
-
-        if ($this->validateSocketConnection($this->session['token'], $clientToken, $conn)) {
-            $this->clients->attach($conn, $this->session['id']);
-            echo "New client connected, token verified: {$conn->resourceId}\n";
-        }
-        else {
-            $conn->close();
-        }
-    }
-
-    public function onMessage(ConnectionInterface $from, $msg) {
-        $data = json_decode($msg);
-        switch($data->type) {
-            
-        }
-    }
-
-    public function onClose(ConnectionInterface $conn) {
-        // The connection closed, remove it, as we can no longer sent it messages
-        $this->clients->detach($conn);
-
-        echo "Connection {$conn->resourceId} has disconnected\n";
-    }
-
-    public function onError(ConnectionInterface $conn, \Exception $e) {
-        echo "An error has occupered: {$e->getMessage()}\n";
-
-        $conn->close();
-    }
-
-
-    protected function getKeysFromRequest(ConnectionInterface $conn) {
-        $queryParams = array();
-        parse_str($conn->httpRequest->getUri()->getQuery(), $queryParams);
-        return $queryParams;
-    }
-
-    protected function getSessionData($sessionId) {
-        $sessionData = $this->sessionHandler->read($sessionId);
-        $sessionDataArray = unserialize($sessionData);
-        return $sessionDataArray;
-    }
-
-    protected function validateSocketConnection($sessionToken, $clientToken, ConnectionInterface $conn) {
-       return $sessionToken === $clientToken;
-    }
-}
+$server = IoServer::factory(
+    new HttpServer(
+        new WsServer(
+            new WebSocketHandler()
+        )
+    ),
+    8081
+);
+echo "Server started\n";
+$server->run();

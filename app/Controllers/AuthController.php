@@ -37,7 +37,7 @@ class AuthController extends Controller{
             } 
         }
 
-        $this->helper->send_json($response);
+        $this->helper->sendJson($response);
     }
 
      // Регистрация
@@ -60,7 +60,7 @@ class AuthController extends Controller{
                 $response['message'] = 'Письмо с подтверждением отправлено на почту';
             }
         }
-        $this->helper->send_json($response);
+        $this->helper->sendJson($response);
     }
 
     public function activation($args){

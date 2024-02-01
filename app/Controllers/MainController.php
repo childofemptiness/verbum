@@ -19,6 +19,6 @@ class MainController extends Controller{
 
     public function getusername() {
         $userFullName = $this->get_model()->getUserName();
-        $this->helper->send_json($userFullName);
+        $this->helper->sendJson($userFullName);
     }
 }
