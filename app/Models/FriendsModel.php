@@ -25,15 +25,13 @@ class FriendsModel extends DbModel {
             'takerId2' => $takerId
         ];
 
-        $matches = $this->get_query($query, $params)[0]['COUNT(*)'];
+        $matches = $this->getQuery($query, $params)[0]['COUNT(*)'];
 
         if ($matches === 0) { 
-            echo 777;
+
             $query = 'INSERT INTO friends (sender_id, taker_id, is_accepted) VALUES (:senderId, :takerId, FALSE)';
             $params = ['takerId' => $takerId, 'senderId' => $senderId];
-            unset($_Ses['error']);
-            $this->set_query($query, $params);
-            print_r($_SESSION['error']);
+            $this->setQuery($query, $params);
         }
     }
 
@@ -43,7 +41,7 @@ class FriendsModel extends DbModel {
         $query = 'UPDATE friends SET is_accepted = 1 WHERE sender_id = :senderId AND taker_id = :takerId';
         $params = ['senderId' => $senderId, 'takerId' => $takerId];
 
-        $this->set_query($query, $params);
+        $this->setQuery($query, $params);
     }
 
     // Подумать насчет параметра для этих функций
@@ -54,7 +52,7 @@ class FriendsModel extends DbModel {
         $query = 'DELETE FROM friends WHERE sender_id = :senderId AND taker_id = :takerId';
         $params = ['senderId' => $senderId, 'takerId' => $takerId];
 
-        $this->set_query($query, $params);
+        $this->setQuery($query, $params);
     }
     // Запросы на дружбу, отправленные пользователем
     public function getAllSentRequests() {
@@ -63,7 +61,7 @@ class FriendsModel extends DbModel {
             $query = 'SELECT taker_id FROM friends WHERE sender_id = :senderId AND is_accepted = FALSE';
             $params = ['senderId' => $senderId];
 
-            $results = $this->get_query($query, $params);
+            $results = $this->getQuery($query, $params);
 
             if ($results) {
                 foreach($results as $item) {
@@ -73,7 +71,7 @@ class FriendsModel extends DbModel {
                 $placeholders = implode(',', array_fill(0, count($senderList), '?'));
                 // Используем плейлсхолдеры
                 $query = "SELECT user_id, name, surname, username FROM users WHERE user_id IN ($placeholders)";
-                $results = $this->get_query($query, $senderList, 1);
+                $results = $this->getQuery($query, $senderList, 1);
                 if ($results) $invites = $this->formalizeDataInTheForm($results);
                 else $invites = null;
     
@@ -93,7 +91,7 @@ class FriendsModel extends DbModel {
         $query = 'SELECT sender_id FROM friends WHERE taker_id = :takerId AND is_accepted = FALSE';
         $params = ['takerId' => $takerId];
 
-        $results = $this->get_query($query, $params);
+        $results = $this->getQuery($query, $params);
 
        if ($results) {
         foreach($results as $item) {
@@ -103,7 +101,7 @@ class FriendsModel extends DbModel {
         $placeholders = implode(',', array_fill(0, count($senderList), '?'));
         // Constructing the query with named placeholders
         $query = "SELECT user_id, name, surname, username FROM users WHERE user_id IN ($placeholders)";
-        $results = $this->get_query($query, $senderList, 1);
+        $results = $this->getQuery($query, $senderList, 1);
 
         $invites = $this->formalizeDataInTheForm($results);
 
@@ -145,7 +143,7 @@ class FriendsModel extends DbModel {
             'userId2' => $userId
         ];
 
-        $results = $this->get_query($query, $params);
+        $results = $this->getQuery($query, $params);
 
         $friendsList = [];
         foreach($results as $item) {
@@ -171,7 +169,7 @@ class FriendsModel extends DbModel {
             'userId2' => $userId,
             'friendId2' => $friendId
         ];
-        $this->set_query($query, $params);
+        $this->setQuery($query, $params);
     }
 
     public function build_page($page_name) {   

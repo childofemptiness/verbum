@@ -20,7 +20,7 @@ class ChatsModel extends DbModel{
             $this->beginTransaction();
 
             $query = 'INSERT INTO chats (chat_type) VALUES ("dialog")';
-            $this->set_query($query);
+            $this->setQuery($query);
             $lastChatId = $this->lastInsertId();
             $query = 'INSERT INTO user_chats (user_id, chat_id) VALUES (:userId, :chatId1), (:interlocutorId, :chatId2)';
             $params = [
@@ -30,7 +30,7 @@ class ChatsModel extends DbModel{
                 'chatId2' => $lastChatId
             ];
 
-            $this->set_query($query, $params);
+            $this->setQuery($query, $params);
 
             $this->commitTransaction();
   
@@ -63,7 +63,7 @@ class ChatsModel extends DbModel{
             'interlocutorId' => $interlocutorId,
         ];
             
-        $results = $this->get_query($query, $params);
+        $results = $this->getQuery($query, $params);
 
         if (!$results) {
 
@@ -77,7 +77,7 @@ class ChatsModel extends DbModel{
 
         $query = 'SELECT name, surname, username FROM users WHERE user_id = :interlocutorId';
         $params = ['interlocutorId' => $interlocutorId];
-        $results = $this->get_query($query, $params);
+        $results = $this->getQuery($query, $params);
 
         $interlocutorInfo['id'] = $interlocutorId;
         $interlocutorInfo['fullName'] = $results[0]['name'] . ' ' . $results[0]['surname'];
@@ -97,11 +97,11 @@ class ChatsModel extends DbModel{
             'dialogId' => $dialogId,
         ];
 
-        $interlocutorId = $this->get_query($query, $params)[0]['user_id'];
+        $interlocutorId = $this->getQuery($query, $params)[0]['user_id'];
 ;
         return $interlocutorId;
     }
-
+// Сделать уже этот метод в DbModel---------------------------------------------------------------------------------------------
     public function build_page($page_name) {    
         $htm_src = $this->output->get_page($page_name);   
         $html = $this->output->replace_localizations($htm_src);

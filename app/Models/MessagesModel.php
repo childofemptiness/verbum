@@ -21,7 +21,7 @@ class MessagesModel extends DbModel {
             'text' => $data->text,
             'parentMessageId' => isset($data->parentMessageId) ? $data->parentMessageId : null,
         ];
-        $this->set_query($query, $params);
+        $this->setQuery($query, $params);
     
         $lastMessageId = $this->lastInsertId();
     
@@ -44,7 +44,7 @@ class MessagesModel extends DbModel {
         $params = [
             'chatId' => $chatId
         ];
-        $messages = $this->get_query($query, $params);
+        $messages = $this->getQuery($query, $params);
 
         return $messages;
     }
@@ -58,7 +58,7 @@ class MessagesModel extends DbModel {
             'messageId' => $data->messageId,
         ];
         unset($_SESSION['error']);
-        $this->set_query($query, $params);
+        $this->setQuery($query, $params);
         print_r($_SESSION['error']);
     }
 
@@ -71,8 +71,6 @@ class MessagesModel extends DbModel {
             'messageId' => $messageId,
             'newText' => $newText,
         ];
-        unset($_SESSION['error']);
-        $this->set_query($query, $params);
-        print_r($_SESSION['error']);
+        $this->setQuery($query, $params);
     }
 }
