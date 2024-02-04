@@ -120,7 +120,7 @@ async function getUserId() {
 
 // Получение/обработка приглашений
 async function fetchInvitations(type) {
-    // try {
+     try {
         // Предполагается, что переменная url содержит правильный путь к вашему API
         const response = await fetch(`/friends/getall` + type + `requests`);
         if (!response.ok) { // Проверка на успешный ответ от сервера
@@ -128,9 +128,9 @@ async function fetchInvitations(type) {
         }
         const data = await response.json();
         if (data != null) renderInvitations(data, type); // Вызов функции отрисовки приглашений
-    // } catch (error) {
-    //     console.error('Error fetching invitations:', error);
-    // }
+     } catch (error) {
+         console.error('Error fetching invitations:', error);
+     }
 }
 
 async function sendResponseToRequest(flag, userId) {

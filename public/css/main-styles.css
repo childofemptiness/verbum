@@ -14,9 +14,13 @@ body, html {
 }
 
 .sidebar {
+    position: fixed;
     width: 300px;
+    height: 100vh;
+    left: 0;
+    top: 0;
     background-color: #2a2a2a; /* Dark grey/black */
-    overflow-y: auto;
+    /* overflow-y: auto; */
     border-right: 1px solid #333; /* Slightly lighter grey for the border */
 }
 
@@ -35,6 +39,7 @@ body, html {
 .user-info {
     display: flex;
     align-items: center; /* Выравнивание иконки и текста по центру по вертикали */
+    z-index: -100;
 }
 
 .user-name {
@@ -48,43 +53,46 @@ body, html {
     color: grey;
     font-size: 25px;
 }
-
-.dropbtn {
-    margin: 10px;
+.dropdown {
+    margin-right: 5px;
+}
+.dropdown .menu-dropbtn {
     background-color: #2a2a2a;
     color: white;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    font-size: 24px;
+    font-size: 25px;
+    padding: 2px 8px;
     border: none;
     cursor: pointer;
-    border-radius: 15px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.4);
+    border-radius: 20px;
+    margin-left: 6px;
 }
 
-.dropdown-content {
-    margin-top: 10px;
-    margin-left: 10px;
-    display: none;
+.dropdown-menu-content{
     position: absolute;
+    margin-top: 30px;
+    display: none;
+    position: fixed; /* Здесь используется fixed вместо absolute */
+    left: 0; /* Отступ с левого края равен нулю по умолчанию */
+    top: 60px; /* Отступ сверху равен высоте кнопки меню */
     background-color: rgba(42, 42, 42, 0.8);
-    /* background-color: white; */
-    min-width: 160px;
+    min-width: 175px; /* Задаем минимальную ширину для выпадающего меню */
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     border-radius: 10px;
     z-index: 1;
-    left: 0; /* Выравниваем по левому краю гамбургера */
 }
 
-.dropdown-content a {
+.dropdown-menu-content a {
     color: white;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
-    border-radius: 10px;
 }
 
-.dropdown-content a:hover {
-    background-color: rgba(0, 0, 0, 0.5);
+.dropdown-menu-content a:hover {
+    background-color: #1e1e1e;
 }
+
 
 
 .conversation {
@@ -102,40 +110,66 @@ body, html {
 }
 
 .chat-area {
-    flex-grow: 1;
     display: flex;
+    margin-left: 250px;
+    height: 100vh;
     flex-direction: column;
+    background-color: #121212;
 }
 
-.chat-messages {
-    flex-grow: 1;
-    padding: 20px;
-    overflow-y: auto;
-    background-color: #121212; /* Dark bg to match the overall minimalistic and dark theme */
-    color: #eee; /* Light text color for readability */
+#chats-list-container {
+    width: 250px;
+    height: 100vh; /* Это установит высоту контейнера равной высоте окна просмотра */
+    overflow-y: auto; /* Это добавит прокрутку если список чатов будет больше чем вмещается на экране */
 }
 
-.message-form {
-    padding: 20px;
-    background-color: #222; /* Slightly lighter than message area bg */
-    border-top: 1px solid #333;
-}
-
-.message-form input[type="text"] {
-    width: calc(100% - 100px);
+.chats-list-header {
     padding: 10px;
-    margin-right: 10px;
-    border: 1px solid #3b3b3b; /* Dark border for input */
-    background-color: #2d2d2d; /* Slightly lighter bg for input */
-    color: #ccc; /* Light grey text for input */
-    border-radius: 7px;
+    font-weight: bold;
 }
 
-.message-form button {
-    padding: 10px 20px;
-    color: #e0e0e0; /* Light grey text for button */
-    background-color: #0a84ff; /* Pop of blue to bring attention to the button */
-    border: none;
-    border-radius: 7px;
+.chats-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.chat-item {
+    padding: 10px;
+    border-bottom: 1px solid #333;
     cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.chat-item:hover {
+    background-color: #1a1a1a;
+}
+
+.chat-name {
+    font-size: 16px;
+    color: #0000ff; /* Темно-серый цвет текста */
+}
+
+/* Дополнительное оформление, если нужно подсветить активный чат */
+.chat-item.active {
+    background-color: #d7d7d7;
+}
+
+/* Медиа-запрос для изменения стилей при ширине окна 600px и меньше */
+@media screen and (max-width: 850px) {
+    .sidebar {
+        width: 180px; /* Примерная ширина кнопки */
+        /* Убедитесь, что у кнопки есть соответствующий класс или адаптируйте селектор */
+        .button-class {
+            display: block; /* или "inline-block" в зависимости от желаемого отображения */
+        }
+    }
+
+    .chat-area {
+         margin-left: 50px; /* Новая ширина .left-sidebar */
+    }
+
+    #chats-list-container {
+        width: 180px;
+    }
 }

@@ -1,0 +1,32 @@
+<aside class="left-sidebar">
+    <header class="left-sidebar-header">
+        <div class="dropdown">
+            <button class="menu-dropbtn">☰</button> <!-- Используются три горизонтальные полосы -->
+            <div class="dropdown-menu-content">
+                <a href="/main/home">Главная</a>
+                <a href="#">Профиль</a>
+                <a href="/friends/home">Друзья</a>
+                <a href="">Группы</a>
+                <a href="#">Безопасность</a>
+                <a href="/auth/logout">Выход</a>
+            </div>
+        </div>
+    </header>
+</aside>
+<div class="contents">
+    <div class="create-group-container">
+        <h1>Создание группы</h1>
+        <form>
+            <div class="form-group">
+                <label for="group-name">Название группы:</label>
+                <input type="text" id="group-name" name="group_name" required>
+            </div>
+            <div id="friendsList" class="form-group">
+                <label>Выберите друзей в группу:</label>
+                <ul class="friends-list">
+                </ul>
+            </div>
+                <button id="create-group-button">Создать группу</button>
+        </form>
+    </div>
+</div>

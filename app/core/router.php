@@ -9,7 +9,6 @@ use App\Core\HelperFunctions;
 class Router {
     private $helper;
     private $dispatcher;
-
     private $httpMethod;
     private $uri;
     private $controller_name;

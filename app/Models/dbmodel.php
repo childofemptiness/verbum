@@ -1,6 +1,5 @@
 <?php
 namespace App\Models;
-use App\Core\HelperFunctions;
 use PDO;
 use PDOException;
 
@@ -9,16 +8,15 @@ class DbModel {
   protected $conx;
   protected $new_id;
   private $pdo;
-  private $statement;
 
-  protected function __construct() {
+  protected function __construct($dbName = null) {
     try {
       $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
     ];
-      $this->pdo = new PDO('mysql:host='.DBHOST.';dbname='.DBNAME, DBUSER, DBPASS, $options);
+      $this->pdo = new PDO('mysql:host='.DBHOST.';dbname=' .($dbName == null ? DBNAME : $dbName), DBUSER, DBPASS, $options);
       $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch(PDOException $e) {
       error_log("Database test failed: " . $e->getMessage());
@@ -28,19 +26,15 @@ class DbModel {
   }  
 
   # Отправить SQL запрос для INSERT, UPDATE or DELETE
-  protected function set_query($sql, $params = []) {
+  protected function setQuery($sql, $params = []) {
     try {
       $statement = $this->pdo->prepare($sql);
       // Привязываем значения параметров
-      //print_r($params);
       foreach ($params as $key => $value) {
         // Привязка параметров к вашему запросу
         $statement->bindValue(':' . $key, $value); // Легкая модификация для прямого использования $value
-        // echo $key;
-        // echo "  =>  ";
-        // echo $value;
+
     }
- //  echo "   ";
         // Выполняем запрос
         $executionResult = $statement->execute();
         
@@ -63,7 +57,7 @@ class DbModel {
     }
 }
 
-  protected function set_multyquery($sql) {
+  protected function setMultyquery($sql) {
     try {
       $this->pdo->exec($sql);
     } catch(PDOException $e) {
@@ -72,7 +66,7 @@ class DbModel {
     }
   }
 
-  protected function beginTransaction(){
+  public function beginTransaction(){
     $this->pdo->beginTransaction();
   }
 
@@ -80,12 +74,12 @@ class DbModel {
     $this->pdo->commit();
   }
 
-  protected function rollBack(){
+  public function rollBack(){
     $this->pdo->rollBack();
   }
 
   # Submit SELECT SQL query
-  protected function get_query($sql, $params = [], $flag = 0) {
+  protected function getQuery($sql, $params = [], $flag = 0) {
     try {
         $statement = $this->pdo->prepare($sql);
         if ($flag === 1) {
@@ -109,7 +103,7 @@ class DbModel {
     }
 }
   # Submit SELECT SQL query - get row count if matches found
-  protected function get_rows($sql, $params=[]) {
+  protected function getRows($sql, $params=[]) {
     try {
       $statement = $this->pdo->prepare($sql);
 
@@ -131,8 +125,9 @@ class DbModel {
   public function getUserIdFromSession() {
     return $_SESSION['id'];
   }
-  protected function lastInsertId()
-  {
+
+  protected function lastInsertId() {
     return $this->pdo->lastInsertId();
   }
+  
 }

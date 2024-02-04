@@ -2,6 +2,7 @@
 
 namespace App\Core;
 
+use App\Models\ChatsModel;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use App\Core\RedisSessionHandler;
@@ -14,11 +15,13 @@ class WebSocketHandler implements MessageComponentInterface {
     protected $session;
     protected $queryParams;
     private $messages;
+    private $chats;
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
         $this->sessionHandler = new RedisSessionHandler();
         $this->messages = new MessagesModel();
+        $this->chats = new ChatsModel();
     }
 
     public function onOpen(ConnectionInterface $conn) {
@@ -52,8 +55,8 @@ class WebSocketHandler implements MessageComponentInterface {
                 $this->handleDialogMessage($from, $data);
                 break;
             
-            case 'dialog-history':
-                $this->handleDialogHistory($from, $data);
+            case 'chat-history':
+                $this->handleChatHistory($from, $data);
                 break;
 
             case 'delete-message':
@@ -62,6 +65,11 @@ class WebSocketHandler implements MessageComponentInterface {
 
             case 'edit-message':
                 $this->editDialogMessage($data);
+                break;
+            
+            case 'group-message':
+                $this->handleGroupMessage($data);
+                break;
         }
     }
 
@@ -95,27 +103,61 @@ class WebSocketHandler implements MessageComponentInterface {
             $clientInfo = $this->clients->offsetGet($client);
 
             if ($clientInfo['userId'] == $data->takerId && $senderInfo['chatId'] == $clientInfo['chatId']) {
-                    print_r($data);
-                    echo "Sending a letter to: $data->takerId\n";
 
                     $msg = json_encode($data);
                     $client->send($msg);
             }
         }
     }
-    // Отправляем измененное сообщение в бд и собеседнику
-    protected function editDialogMessage($data) {
+    // Обрабатываем групповое сообщение
+    protected function handleGroupMessage(stdClass $data) {
 
-        $this->messages->editMessage($data->dialogId, $data->messageId, $data->text);
+        $messageId = $this->messages->setMessage($data);
+        $data->messageId = $messageId;
+
+        $senderUserName = $this->messages->getSenderUserName($messageId);
+        $data->userName = $senderUserName;
+        
+        $groupMembersList = $this->chats->getGroupMembersList($data->chatId);
 
         foreach ($this->clients as $client) {
 
             $clientInfo = $this->clients->offsetGet($client);
 
-            if ($clientInfo['chatId'] == $data->dialogId && $clientInfo['userId'] == $data->takerId) {
+            if ($data->chatId == $clientInfo['chatId'] && in_array($clientInfo['userId'], $groupMembersList) && $clientInfo['userId'] != $data->senderId) {
 
                 $msg = json_encode($data);
                 $client->send($msg);
+            }
+        }
+    }
+    
+    // Отправляем измененное сообщение в бд и собеседнику
+    protected function editDialogMessage($data) {
+
+        $this->messages->editMessage($data->chatId, $data->messageId, $data->text);
+
+        foreach ($this->clients as $client) {
+
+            $clientInfo = $this->clients->offsetGet($client);
+            // Проверяем, если у объекта сообщения нет поля получателя(собеседника), если нет - сообщение диалоговое, отправляем только собеседнику, иначе - это групповое сообщение
+            if (isset($data->takerId)) {
+
+                if ($clientInfo['chatId'] == $data->chatId && $clientInfo['userId'] == $data->takerId) {
+
+                    $msg = json_encode($data);
+                    $client->send($msg);
+                }
+            }
+            else {
+
+                $groupMembersList = $this->chats->getGroupmembersList($data->chatId);
+
+                if (in_array($clientInfo['userId'], $groupMembersList) && $clientInfo['userId'] != $data->senderId) {
+
+                    $msg = json_encode($data);
+                    $client->send($msg);
+                }
             }
         }
         
@@ -129,10 +171,26 @@ class WebSocketHandler implements MessageComponentInterface {
 
             $clientInfo = $this->clients->offsetGet($client);
 
-            if ($clientInfo['userId'] == $data->interlocutorId && $clientInfo['chatId'] == $data->dialogId) {
+            if ($data->chatType == 'dialog') {
 
-                $msg = json_encode($data);
-                $client->send($msg);
+                if ($clientInfo['userId'] == $data->interlocutorId && $clientInfo['chatId'] == $data->chatId) {
+
+                    unset($data->chattype);
+
+                    $msg = json_encode($data);
+                    $client->send($msg);
+                }
+            }
+            else {
+                $groupMembersList = $this->chats->getGroupmembersList($data->chatId);
+
+                if (in_array($clientInfo['userId'], $groupMembersList) && $clientInfo['userId'] != $data->senderId) {
+                    
+                    unset($data->chatType);
+                    
+                    $msg = json_encode($data);
+                    $client->send($msg);
+                }                
             }
         }
     }
@@ -147,12 +205,12 @@ class WebSocketHandler implements MessageComponentInterface {
         $from->send(json_encode($response));
     }
     // Получаем историю сообщений из бд и возвращаем тому, кто запросил
-    protected function handleDialogHistory(ConnectionInterface $from, stdClass $data) {
+    protected function handleChatHistory(ConnectionInterface $from, stdClass $data) {
 
-        $messagesHistory = $this->messages->getChatMessages($data->dialogId);
+        $messagesHistory = $this->messages->getChatMessages($data->chatId);
 
         $data = [
-            'type' => 'dialog-history',
+            'type' => 'chat-history',
             'messages' => $messagesHistory,
         ];
         $msg = json_encode($data);
