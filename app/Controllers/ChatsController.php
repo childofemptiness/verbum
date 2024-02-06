@@ -46,4 +46,20 @@ class ChatsController extends Controller {
         $data = $this->helper->catchJson();
         $this->get_model()->createGroup($data);
     }
+
+    public function sendchatslist() {
+        $chatsList = $this->get_model()->getChatsList();
+       $this->helper->sendJson($chatsList);
+    }
+
+    public function group() {
+        $this->view->page_title = "Group";
+        $this->get_model()->build_page('chat');
+    }
+
+    public function sendgroupname() {
+        $data = $this->helper->catchJson();
+        $groupName = $this->get_model()->getgroupname($data);
+        $this->helper->sendJson($groupName);
+    }
 }

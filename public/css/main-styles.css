@@ -132,3 +132,41 @@ body, html {
          margin-left: 50px; /* Новая ширина .left-sidebar */
     }
 }
+
+#chats-list-container {
+    width: 250px;
+    height: 100vh; /* Это установит высоту контейнера равной высоте окна просмотра */
+    overflow-y: auto; /* Это добавит прокрутку если список чатов будет больше чем вмещается на экране */
+}
+
+.chats-list-header {
+    padding: 10px;
+    font-weight: bold;
+}
+
+.chats-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.chat-item {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.chat-item:hover {
+    background-color: #1a1a1a;
+}
+
+.chat-name {
+    font-size: 16px;
+    color: #0000ff; /* Темно-серый цвет текста */
+}
+
+/* Дополнительное оформление, если нужно подсветить активный чат */
+.chat-item.active {
+    background-color: #d7d7d7;
+}
