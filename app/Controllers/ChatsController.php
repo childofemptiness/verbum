@@ -6,14 +6,14 @@ use App\Core\HelperFunctions;
 
 class ChatsController extends Controller {
     protected $helper;
+
     public function __construct($controller, $method) {
         parent:: __construct($controller, $method);
         $this->load_model();
         $this->helper = new HelperFunctions();
     }
-
     public function dialog() { 
-        $this->view->page_title = "Chat";
+        $this->view->page_title = "Dialog";
         $this->get_model()->build_page('chat');
     }
 
@@ -35,5 +35,15 @@ class ChatsController extends Controller {
     public function senduserid() {
         $userId = $this->get_model()->getUserIdFromSession();
         $this->helper->sendJson($userId);
+    }
+
+    public function groups() {
+        $this->view->page_title = "Groups";
+        $this->get_model()->build_page('groupsHomePage');
+    }
+
+    public function creategroup() {
+        $data = $this->helper->catchJson();
+        $this->get_model()->createGroup($data);
     }
 }

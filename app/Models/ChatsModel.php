@@ -106,5 +106,45 @@ class ChatsModel extends DbModel{
         $htm_src = $this->output->get_page($page_name);   
         $html = $this->output->replace_localizations($htm_src);
         $this->output->render($html);
-      }
+    }
+    // Создаем группу
+    public function createGroup($data) {
+        try {
+            $this->beginTransaction();
+    
+            $query = 'INSERT INTO chats (chat_name, chat_type) VALUES (:groupName, "group")';
+            $params = [
+                'groupName' => $data['groupName'],
+            ];
+            $this->setQuery($query, $params);
+    
+            $lastGroupId = $this->lastInsertId();
+            $userId = $this->getUserIdFromSession();
+
+            // Подготовка запроса для вставки данных пользователей
+            $query = "INSERT INTO user_chats (user_id, chat_id, status) VALUES 
+            ($userId, $lastGroupId, 'admin')";
+    
+            // Добавление значений для каждого участника группы
+            $valuesToInsert = '';
+            foreach ($data['groupMembers'] as $index => $groupMemberTag) {
+
+                $groupMemberId = $groupMemberTag - 666666;
+                $valuesToInsert .= ",\n ($groupMemberId, $lastGroupId, 'member')";
+            }
+    
+            // Конкатенация всего финального запроса
+            $query .= $valuesToInsert;
+
+            // Выполнение запроса на добавление участников группы
+            $this->setQuery($query);
+
+            // Сохранение результатов транзакции
+            $this->commitTransaction();
+        } catch (Exception $e) {
+            // Откат в случае ошибки
+            $this->rollBack();
+            error_log($e->getMessage()); // Логирование исключения
+        }
+    }    
 }

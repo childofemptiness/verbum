@@ -4,6 +4,7 @@ var dialogId;
 let messageData = new Map();
 let originalMessageId = null;
 let editMessageId = null;
+let groupMembers = new Array();
 
 const path = window.location.pathname;
 const segments = path.split('/');
@@ -13,6 +14,7 @@ dialogId = (dialogIndex !== -1 && segments[dialogIndex + 1]) ? segments[dialogIn
 document.addEventListener('DOMContentLoaded', function() {
     
     
+   if (path.includes('dialog')) {
     getUserId().then((id) => {
         localStorage.setItem('userId', id);
     });
@@ -22,6 +24,8 @@ document.addEventListener('DOMContentLoaded', function() {
     getInterlocutorInfo(dialogId, setInterlocutorInfo).then((data) => {
         interlocutorData = data;
     });
+   }
+
 
     if (socket) {
         socket.addEventListener('open', function(event) {
@@ -31,6 +35,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetchDialogHistory(dialogId);
             }
         });
+    }
+
+    if(path.includes('groups')) {
+        getFriendsList();
     }
 
    
@@ -58,51 +66,53 @@ socket.addEventListener('error', function(event) {
 const inputElement = document.querySelector('.chat-input');
 const sendButton = document.querySelector('.chat-send');
 // Отправка сообщения по нажатию на кнопку    
-sendButton.addEventListener('click', function() {
-    if (socket.readyState === WebSocket.OPEN) {
-        handleMessageSend();
-    } else {
-        console.log('Cannot send message: WebSocket is not connected.');
-    }
-});
-// Отправка сообщения по нажатию на клавишу Enter
-document.addEventListener('keydown', function(event) {
-    if (inputElement.value != '' && event.code == 'Enter' && socket.readyState === WebSocket.OPEN) {
-       handleMessageSend();
-    }
-});
-
-
-// Нажатие правой кнопкой по мыши
-const chatContainer = document.querySelector('.chat-messages');
-chatContainer.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-
-   removeExistingMenu();
-
-    const messageDiv = event.target.closest('.message');
-    if(!messageDiv) return;
-    if(document.getElementById('contextMenu')) {
-    }
-    //Создаем контекстное меню на основе шаблона
-    const contextMenu = createContextMenu(Number(messageDiv.dataset.id));
-    
-    positionContextMenu(event.pageX, event.pageY, contextMenu);
-
-    document.body.appendChild(contextMenu);
-});
-
-document.addEventListener('click', function(event) {
-    // проверить, что клик был сделан вне элемента .message
-    if (!event.target.matches('.message') && !event.target.matches('.context-menu')) {
-        // получить возможное существующее контекстное меню
-        const contextMenu = document.querySelector('.context-menu');
-        if (contextMenu) {
-            // вызвать функцию для удаления контекстного меню
-            removeExistingMenu();
+if (path.includes('dialog')) {
+    sendButton.addEventListener('click', function() {
+        if (socket.readyState === WebSocket.OPEN) {
+            handleMessageSend();
+        } else {
+            console.log('Cannot send message: WebSocket is not connected.');
         }
-    }
-});
+    });
+    // Отправка сообщения по нажатию на клавишу Enter
+    document.addEventListener('keydown', function(event) {
+        if (inputElement.value != '' && event.code == 'Enter' && socket.readyState === WebSocket.OPEN) {
+           handleMessageSend();
+        }
+    });
+
+
+    // Нажатие правой кнопкой по мыши
+    const chatContainer = document.querySelector('.chat-messages');
+    chatContainer.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+
+    removeExistingMenu();
+
+        const messageDiv = event.target.closest('.message');
+        if(!messageDiv) return;
+        if(document.getElementById('contextMenu')) {
+        }
+        //Создаем контекстное меню на основе шаблона
+        const contextMenu = createContextMenu(Number(messageDiv.dataset.id));
+        
+        positionContextMenu(event.pageX, event.pageY, contextMenu);
+
+        document.body.appendChild(contextMenu);
+    });
+
+    document.addEventListener('click', function(event) {
+        // проверить, что клик был сделан вне элемента .message
+        if (!event.target.matches('.message') && !event.target.matches('.context-menu')) {
+            // получить возможное существующее контекстное меню
+            const contextMenu = document.querySelector('.context-menu');
+            if (contextMenu) {
+                // вызвать функцию для удаления контекстного меню
+                removeExistingMenu();
+            }
+        }
+    });
+}
 
 
 
@@ -580,3 +590,117 @@ function replyToMessage(messageId) {
     const inputField = document.querySelector('.chat-input');
     inputField.focus();
 }
+
+
+
+async function getFriendsList() {
+    try {
+        const response = await fetch(`/friends/sendfriendslist`);
+        if (!response.ok) { // Проверка на успешный ответ от сервера
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        displayFriendsList(data);
+    } catch (error) {
+        console.error('Произошла ошибка:', error);
+    }
+}
+
+function displayFriendsList(friends) {
+    // Находим родительский контейнер для списка
+    const container = document.querySelector('.friends-list');
+    // Создаем элемент ul, который будет содержать список друзей
+    const ul = document.createElement('ul');
+    ul.className = 'friends-list';
+    
+    // Для каждого друга создаем элемент списка
+    friends.forEach(friend => {
+      const li = document.createElement('li');
+      li.className = 'friend-item';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = friend.fullName;
+      nameSpan.className = 'friend-name';
+      
+      li.appendChild(nameSpan);
+      
+      // Добавляем обработчик клика, чтобы добавлять друга в участники группы
+      li.addEventListener('click', () => {
+        console.log(friend.tag);
+        addFriendToGroup(friend.tag);
+      });
+
+      // Добавляем элемент списка в ul
+      ul.appendChild(li);
+    });
+    
+    // Очищаем ранее добавленные друзей и добавляем новый список
+    container.innerHTML = '';
+    container.appendChild(ul);
+}
+
+function addFriendToGroup(friendId) {
+    if (groupMembers.includes(friendId)) groupMembers.pop(friendId);
+
+    else groupMembers.push(friendId);
+}
+
+async function sendRequestToCreateGroup(groupName) {
+    body = {
+        groupName: groupName,
+        groupMembers: groupMembers,
+    };
+    console.log(body);
+    try { const response = await fetch('/chats/creategroup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch');
+      }
+
+    } catch (error) {
+        console.error('Произошла ошибка:', error);
+        showFlashMessage('Error occurred', 'violet');
+      }
+}
+
+const createGroupButton = document.getElementById('create-group-button');
+createGroupButton.addEventListener('click', function(event) {
+
+    event.preventDefault();
+    if (groupMembers.length < 2) {
+        console.log(groupMembers);
+        showFlashMessage('Недостаточное колличество участников', 'red');
+    }
+    
+    const inputElement = document.getElementById('group-name');
+
+    if (inputElement.value != '') {
+        sendRequestToCreateGroup(inputElement.value);
+    }
+})
+
+
+
+ // flash-сообщение
+ function showFlashMessage(message, color) {
+    const flashMessage = document.createElement('div');
+    flashMessage.textContent = message;
+    flashMessage.style.backgroundColor = color;
+    flashMessage.style.position = 'fixed';
+    flashMessage.style.top = '10px';
+    flashMessage.style.left = '10px';
+    flashMessage.style.padding = '10px';
+    flashMessage.style.borderRadius = '5px';
+    document.body.appendChild(flashMessage);
+    
+    // Удалить сообщение через 3 секунды
+    setTimeout(() => {
+      flashMessage.remove();
+    }, 600);
+  }

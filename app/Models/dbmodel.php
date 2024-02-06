@@ -125,8 +125,9 @@ class DbModel {
   public function getUserIdFromSession() {
     return $_SESSION['id'];
   }
-  protected function lastInsertId()
-  {
+
+  protected function lastInsertId() {
     return $this->pdo->lastInsertId();
   }
+  
 }

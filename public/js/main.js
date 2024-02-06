@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     var dropdown = document.querySelector('.dropdown');
-    var dropbtn = document.querySelector('.dropbtn');
-    var dropdownContent = document.querySelector('.dropdown-content');
+    var dropbtn = document.querySelector('.menu-dropbtn');
+    var dropdownContent = document.querySelector('.dropdown-menu-content');
 
     dropbtn.addEventListener('click', function(event) {
         // Переключаем видимость меню
