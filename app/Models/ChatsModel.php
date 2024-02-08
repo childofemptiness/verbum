@@ -216,4 +216,16 @@ class ChatsModel extends DbModel{
 
         return $results[0]['chat_name'];
     }
+
+    public function getGroupmembersList($groupId) {
+        
+        $query = "SELECT uc.user_id FROM user_chats uc WHERE uc.chat_id = $groupId";
+        $results = $this->getQuery($query);
+        
+        $groupMembersIds = [];
+        foreach($results as $item) {
+            $groupMembersIds[] = $item['user_id'];
+        }
+        return $groupMembersIds;
+    }
 }

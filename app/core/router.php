@@ -66,10 +66,10 @@ class Router {
                     $method = NOT_FOUND;
 
                 }
-                // if (empty($_SESSION['id']) && $controller != 'Auth' && !$activationFlag) {
+                if (empty($_SESSION['id']) && $controller != 'Auth' && !$activationFlag) {
 
-                //     $this->helper->redirect('auth/loginpage');
-                // }
+                    $this->helper->redirect('auth/loginpage');
+                }
                 // Переопределяем класс контроллера, если вдруг контроллер изменился
                 $controller_class = "App\\Controllers\\" . $controller . "Controller";
 

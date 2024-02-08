@@ -10,22 +10,24 @@ const path = window.location.pathname;
 const segments = path.split('/');
 const dialogIndex = segments.indexOf('dialog');
 const groupIndex = segments.indexOf('group');
-const chatIndex = dialogIndex == true ? dialogIndex : groupIndex;
+const chatIndex = dialogIndex != -1 ? dialogIndex : groupIndex;
 chatId = (chatIndex !== -1 && segments[chatIndex + 1]) ? segments[chatIndex + 1] : null;
-
 document.addEventListener('DOMContentLoaded', function() {
     
     
-   if (path.includes('dialog')) {
+   if (segments[2] == 'dialog' || segments[2] == 'group') {
     getUserId().then((id) => {
         localStorage.setItem('userId', id);
     });
 
     userId = localStorage.getItem('userId');
 
-    getInterlocutorInfo(chatId, setInterlocutorInfo).then((data) => {
-        interlocutorData = data;
-    });
+   }
+
+   if (path.includes('dialog')) {
+        getInterlocutorInfo(chatId, setInterlocutorInfo).then((data) => {
+            interlocutorData = data;
+        });
    }
 
 
@@ -33,8 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {
         socket.addEventListener('open', function(event) {
             console.log('Connected to server.');
     
-            if (path.includes('dialog') && chatId) {
-                fetchDialogHistory(chatId);
+            if (segments[2] == 'dialog' || segments[2] == 'group') {
+                fetchChatHistory(chatId);
             }
         });
     }
@@ -43,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         getFriendsList();
     }
 
-    if(path.includes('group')) {
+    if(segments[2] == 'group') {
         getGroupName();
     }
 });
@@ -70,10 +72,10 @@ socket.addEventListener('error', function(event) {
 const inputElement = document.querySelector('.chat-input');
 const sendButton = document.querySelector('.chat-send');
 // Отправка сообщения по нажатию на кнопку    
-if (path.includes('dialog')) {
+if (segments[2] == 'dialog' || segments[2] == 'group') {
     sendButton.addEventListener('click', function() {
         if (socket.readyState === WebSocket.OPEN) {
-            handleMessageSend();
+            handleMessageSend(segments[2]);
         } else {
             console.log('Cannot send message: WebSocket is not connected.');
         }
@@ -139,17 +141,19 @@ window.addEventListener('click', function(event) {
     }
 });
 
-function handleMessageSend() {
+function handleMessageSend(chatType) {
 
     if (editMessageId != null) {
 
         body = {
-            'type': 'edit-message',
+            type: 'edit-message',
             messageId: editMessageId,
-            dialogId: chatId,
-            takerId: interlocutorData.id,
+            chatId: chatId,
             text: inputElement.value,
+            chatType: chatType,
         };
+
+        if (chatType == 'dialog') body.takerId = interlocutorData.id;
 
         sendSocketMessage(body);
 
@@ -181,16 +185,30 @@ function handleMessageSend() {
 
     } else {
 
-        body = {
-        type: 'dialog-message',
-        messageId: null,
-        text: inputElement.value,
-        takerId: interlocutorData.id,
-        dialogId: chatId,
-        sendDate: new Date(),
-        // Если сломается, раскомментируй нижнюю строку ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-         senderId: userId,
-        };
+        if (chatType == 'dialog') {
+
+            body = {
+                type: 'dialog-message',
+                messageId: null,
+                text: inputElement.value,
+                takerId: interlocutorData.id,
+                chatId: chatId,
+                sendDate: new Date(),
+                senderId: userId,
+                };
+
+        } else {
+
+            body = {
+                type: 'group-message',
+                messageId: null,
+                text: inputElement.value,
+                chatId: chatId,
+                sendDate: new Date(),
+                senderId: userId,
+                userName: 'Вы'
+            };
+        }
 
         body = addMessageToDOM(body, true);
 
@@ -207,15 +225,14 @@ function handleMessageSend() {
 function sendSocketMessage(body) {
 
     data = JSON.stringify(body);    
-
     socket.send(data);
 }
 
 // Запрос на получение истории сообщений
-function fetchDialogHistory(chatId) {
+function fetchChatHistory(chatId) {
     body = {
-        type: 'dialog-history',
-        dialogId: chatId,
+        type: 'chat-history',
+        chatId: chatId,
     };
 
     data = JSON.stringify(body);
@@ -227,9 +244,8 @@ function fetchDialogHistory(chatId) {
 
 // Получить информацию о собеседнике
 async function getInterlocutorInfo(chatId, callback) {
-
     try {
-        const response = await fetch(`/chats/sendinterlocutorinfo/${dialogId}`);
+        const response = await fetch(`/chats/sendinterlocutorinfo/${chatId}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -267,7 +283,7 @@ function handleSocketMessage(data) {
             addMessageToDOM(data, false);
             break;
         // Обработка случая, когда получена история сообщений
-        case 'dialog-history':
+        case 'chat-history':
             let messageHistory = data.messages;
             messageHistory.forEach(message => {
                 addMessageToDOM(message, message.senderId == userId);
@@ -310,6 +326,9 @@ function handleSocketMessage(data) {
             messageTimeP.innerHTML = hours + ':' + minutes;
 
             break;
+        // Случай, когда было получено групповое сообщение    
+        case 'group-message':
+            addMessageToDOM(data, false);
     }
 }
 
@@ -341,7 +360,7 @@ function addMessageToDOM(data, isOutGoing) {
         replyIndicatorDiv.classList.add('reply-indicator');
         const replyAuthorSpan = document.createElement('span');
         replyAuthorSpan.classList.add('reply-author');
-        replyAuthorSpan.textContent = isOutGoing ? 'Вы' : interlocutorData.nick; // Тут указываем имя пользователя или другую информацию
+        replyAuthorSpan.textContent = data.userName; // Тут указываем имя пользователя или другую информацию
         const blockquote = document.createElement('blockquote');
         blockquote.textContent = messageData.get(originalMessageId).text; // Тут указываем цитируемый текст
 
@@ -392,6 +411,14 @@ function addMessageToDOM(data, isOutGoing) {
         originalMessageId = null;
 
     } else {
+        // Добавляем автора сообщения, если это групповое сообщение
+        if (data.type == 'group-message' || typeof data.type == 'undefined') {
+
+            const authorP = document.createElement('p');
+            authorP.classList.add('author-name');
+            authorP.textContent = isOutGoing ? 'Вы' : data.userName;
+            messageWrapperDiv.appendChild(authorP);
+        }
         // Создание элемента p для текста обычного сообщения
         const messageP = document.createElement('p');
         messageP.classList.add('message-text');
@@ -414,6 +441,7 @@ function addMessageToDOM(data, isOutGoing) {
         messageWrapperDiv.id = `message-${data.messageId}`;
         messageWrapperDiv.dataset.id = data.messageId;
     }
+
 
     // Добавление всего сообщения или ответа в контейнер чата
     messagesElement.appendChild(messageWrapperDiv);
@@ -438,7 +466,7 @@ function createContextMenu(messageId) {
     contextMenu.classList.add('context-menu');
 
     if (messageData.get(messageId).senderId == userId) {
-      contextMenu.appendChild(createActionButton('delete', () => deleteMessage(messageId)));
+      contextMenu.appendChild(createActionButton('delete', () => deleteMessage(messageId, segments[2])));
       contextMenu.appendChild(createActionButton('edit', () => editMessage(messageId)));
     }
   
@@ -498,14 +526,17 @@ function createActionButton(text, action) {
 
 
 // Функция удаления сообщения
-function deleteMessage(messageId) {
+function deleteMessage(messageId, chatType) {
 
     body = {
         type: 'delete-message',
-        interlocutorId: interlocutorData.id,
         messageId: messageId,
-        dialogId: chatId,
+        chatId: chatId,
+        chatType: chatType,
+        senderId: userId,
     };
+
+    if (chatType == 'dialog') body.interlocutorId = interlocutorData.id;
 
     sendSocketMessage(body);
 
@@ -625,7 +656,6 @@ function displayFriendsList(friends) {
       
       // Добавляем обработчик клика, чтобы добавлять друга в участники группы
       li.addEventListener('click', () => {
-        console.log(friend.tag);
         addFriendToGroup(friend.tag);
       });
 
@@ -661,7 +691,6 @@ async function sendRequestToCreateGroup(groupName) {
         groupName: groupName,
         groupMembers: groupMembers,
     };
-    console.log(body);
     try { const response = await fetch('/chats/creategroup', {
         method: 'POST',
         headers: {
@@ -694,7 +723,6 @@ async function getGroupName() {
         });
 
         const groupName = await response.json();
-        console.log(groupName);
         displayGroupName(groupName);
     } catch (error) {
         console.error('Произошла ошибка:', error);
@@ -709,7 +737,6 @@ if (path.includes(`groups`)) {
 
         event.preventDefault();
         if (groupMembers.length < 2) {
-            console.log(groupMembers);
             showFlashMessage('Недостаточное колличество участников', 'red');
         }
         

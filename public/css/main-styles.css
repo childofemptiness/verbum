@@ -117,22 +117,6 @@ body, html {
     background-color: #121212;
 }
 
-
-/* Медиа-запрос для изменения стилей при ширине окна 600px и меньше */
-@media screen and (max-width: 850px) {
-    .sidebar {
-        width: 180px; /* Примерная ширина кнопки */
-        /* Убедитесь, что у кнопки есть соответствующий класс или адаптируйте селектор */
-        .button-class {
-            display: block; /* или "inline-block" в зависимости от желаемого отображения */
-        }
-    }
-
-    .chat-area {
-         margin-left: 50px; /* Новая ширина .left-sidebar */
-    }
-}
-
 #chats-list-container {
     width: 250px;
     height: 100vh; /* Это установит высоту контейнера равной высоте окна просмотра */
@@ -169,4 +153,23 @@ body, html {
 /* Дополнительное оформление, если нужно подсветить активный чат */
 .chat-item.active {
     background-color: #d7d7d7;
+}
+
+/* Медиа-запрос для изменения стилей при ширине окна 600px и меньше */
+@media screen and (max-width: 850px) {
+    .sidebar {
+        width: 180px; /* Примерная ширина кнопки */
+        /* Убедитесь, что у кнопки есть соответствующий класс или адаптируйте селектор */
+        .button-class {
+            display: block; /* или "inline-block" в зависимости от желаемого отображения */
+        }
+    }
+
+    .chat-area {
+         margin-left: 50px; /* Новая ширина .left-sidebar */
+    }
+
+    #chats-list-container {
+        width: 180px;
+    }
 }

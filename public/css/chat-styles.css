@@ -178,7 +178,6 @@ body, button, input {
     align-self: flex-end;
     background-image: linear-gradient(to bottom, #d4a241, #ef4b42, #8b599e);
     right: 15px;
-    /* clip-path: url(#clip-outgoing); */
 }
 
 
@@ -187,10 +186,13 @@ body, button, input {
     align-self: flex-start;
     background-image: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d);
     left: 15px;
-    /* clip-path: url(#clip-incoming); */
 }
 
-
+p.author-name {
+    margin: 0 0 0 -15px;
+    color: black;
+    font-weight: bold;
+}
 
 p.message-text, p.reply-message {
     margin: 0;
@@ -455,16 +457,20 @@ blockquote {
     .left-sidebar {
         width: 60px; /* Примерная ширина кнопки */
         /* Убедитесь, что у кнопки есть соответствующий класс или адаптируйте селектор */
-        .button-class {
-            display: block; /* или "inline-block" в зависимости от желаемого отображения */
-        }
+        margin-right: 120px;
+    }
+
+    .button-class {
+        display: block; /* или "inline-block" в зависимости от желаемого отображения */
     }
 
     .chat-container {
-        margin-left: -50px; /* Новая ширина .left-sidebar */
+        width: calc(100% - 60px);
+        margin-left: 50px; /* Новая ширина .left-sidebar */
     }
 
     .contents {
         margin-left: 50px;
     }
+
 }

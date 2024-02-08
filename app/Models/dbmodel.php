@@ -123,7 +123,7 @@ class DbModel {
   }
 
   public function getUserIdFromSession() {
-    return 18;
+    return $_SESSION['id'];
   }
 
   protected function lastInsertId() {
