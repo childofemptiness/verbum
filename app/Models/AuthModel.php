@@ -46,9 +46,6 @@ class AuthModel extends DbModel {
 
     // Проверка пароля
     private function verifyPassword($inputPassword, $storedPasswordHash) {
-        // echo $inputPassword . "\n";
-        // echo $storedPasswordHash . "\n";
-        // echo password_verify($inputPassword, $storedPasswordHash);
         return password_verify($inputPassword, $storedPasswordHash);
     }
 
