@@ -1,46 +1,60 @@
 var interlocutorData;
 var userId;
-var dialogId;
+var chatId;
 let messageData = new Map();
 let originalMessageId = null;
 let editMessageId = null;
+let groupMembers = new Array();
 
 const path = window.location.pathname;
 const segments = path.split('/');
 const dialogIndex = segments.indexOf('dialog');
-dialogId = (dialogIndex !== -1 && segments[dialogIndex + 1]) ? segments[dialogIndex + 1] : null;
-
+const groupIndex = segments.indexOf('group');
+const chatIndex = dialogIndex != -1 ? dialogIndex : groupIndex;
+chatId = (chatIndex !== -1 && segments[chatIndex + 1]) ? segments[chatIndex + 1] : null;
 document.addEventListener('DOMContentLoaded', function() {
     
     
+   if (segments[2] == 'dialog' || segments[2] == 'group') {
     getUserId().then((id) => {
         localStorage.setItem('userId', id);
     });
 
     userId = localStorage.getItem('userId');
 
-    getInterlocutorInfo(dialogId, setInterlocutorInfo).then((data) => {
-        interlocutorData = data;
-    });
+   }
+
+   if (path.includes('dialog')) {
+        getInterlocutorInfo(chatId, setInterlocutorInfo).then((data) => {
+            interlocutorData = data;
+        });
+   }
+
 
     if (socket) {
         socket.addEventListener('open', function(event) {
             console.log('Connected to server.');
     
-            if (path.includes('dialog') && dialogId) {
-                fetchDialogHistory(dialogId);
+            if (segments[2] == 'dialog' || segments[2] == 'group') {
+                fetchChatHistory(chatId);
             }
         });
     }
 
-   
+    if(path.includes('groups')) {
+        getFriendsList();
+    }
+
+    if(segments[2] == 'group') {
+        getGroupName();
+    }
 });
 
 
 var token = localStorage.getItem('userToken');
 var encodedToken = encodeURIComponent(token);
 var encodedSessionId = encodeURIComponent(document.cookie.replace(/(?:(?:^|.*;\s*)PHPSESSID\s*\=\s*([^;]*).*$)|^.*$/, "$1"));
-const socket = new WebSocket(`ws://localhost:8081/ws?token=${encodedToken}&phpsessid=${encodedSessionId}&chatId=${dialogId}`);
+const socket = new WebSocket(`ws://localhost:8081/ws?token=${encodedToken}&phpsessid=${encodedSessionId}&chatId=${chatId}`);
 
 socket.addEventListener('message', function(event) {
     const data = JSON.parse(event.data);
@@ -58,51 +72,53 @@ socket.addEventListener('error', function(event) {
 const inputElement = document.querySelector('.chat-input');
 const sendButton = document.querySelector('.chat-send');
 // Отправка сообщения по нажатию на кнопку    
-sendButton.addEventListener('click', function() {
-    if (socket.readyState === WebSocket.OPEN) {
-        handleMessageSend();
-    } else {
-        console.log('Cannot send message: WebSocket is not connected.');
-    }
-});
-// Отправка сообщения по нажатию на клавишу Enter
-document.addEventListener('keydown', function(event) {
-    if (inputElement.value != '' && event.code == 'Enter' && socket.readyState === WebSocket.OPEN) {
-       handleMessageSend();
-    }
-});
-
-
-// Нажатие правой кнопкой по мыши
-const chatContainer = document.querySelector('.chat-messages');
-chatContainer.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-
-   removeExistingMenu();
-
-    const messageDiv = event.target.closest('.message');
-    if(!messageDiv) return;
-    if(document.getElementById('contextMenu')) {
-    }
-    //Создаем контекстное меню на основе шаблона
-    const contextMenu = createContextMenu(Number(messageDiv.dataset.id));
-    
-    positionContextMenu(event.pageX, event.pageY, contextMenu);
-
-    document.body.appendChild(contextMenu);
-});
-
-document.addEventListener('click', function(event) {
-    // проверить, что клик был сделан вне элемента .message
-    if (!event.target.matches('.message') && !event.target.matches('.context-menu')) {
-        // получить возможное существующее контекстное меню
-        const contextMenu = document.querySelector('.context-menu');
-        if (contextMenu) {
-            // вызвать функцию для удаления контекстного меню
-            removeExistingMenu();
+if (segments[2] == 'dialog' || segments[2] == 'group') {
+    sendButton.addEventListener('click', function() {
+        if (socket.readyState === WebSocket.OPEN) {
+            handleMessageSend(segments[2]);
+        } else {
+            console.log('Cannot send message: WebSocket is not connected.');
         }
-    }
-});
+    });
+    // Отправка сообщения по нажатию на клавишу Enter
+    document.addEventListener('keydown', function(event) {
+        if (inputElement.value != '' && event.code == 'Enter' && socket.readyState === WebSocket.OPEN) {
+           handleMessageSend();
+        }
+    });
+
+
+    // Нажатие правой кнопкой по мыши
+    const chatContainer = document.querySelector('.chat-messages');
+    chatContainer.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+
+    removeExistingMenu();
+
+        const messageDiv = event.target.closest('.message');
+        if(!messageDiv) return;
+        if(document.getElementById('contextMenu')) {
+        }
+        //Создаем контекстное меню на основе шаблона
+        const contextMenu = createContextMenu(Number(messageDiv.dataset.id));
+        
+        positionContextMenu(event.pageX, event.pageY, contextMenu);
+
+        document.body.appendChild(contextMenu);
+    });
+
+    document.addEventListener('click', function(event) {
+        // проверить, что клик был сделан вне элемента .message
+        if (!event.target.matches('.message') && !event.target.matches('.context-menu')) {
+            // получить возможное существующее контекстное меню
+            const contextMenu = document.querySelector('.context-menu');
+            if (contextMenu) {
+                // вызвать функцию для удаления контекстного меню
+                removeExistingMenu();
+            }
+        }
+    });
+}
 
 
 
@@ -125,17 +141,19 @@ window.addEventListener('click', function(event) {
     }
 });
 
-function handleMessageSend() {
+function handleMessageSend(chatType) {
 
     if (editMessageId != null) {
 
         body = {
-            'type': 'edit-message',
+            type: 'edit-message',
             messageId: editMessageId,
-            dialogId: dialogId,
-            takerId: interlocutorData.id,
+            chatId: chatId,
             text: inputElement.value,
+            chatType: chatType,
         };
+
+        if (chatType == 'dialog') body.takerId = interlocutorData.id;
 
         sendSocketMessage(body);
 
@@ -167,16 +185,30 @@ function handleMessageSend() {
 
     } else {
 
-        body = {
-        type: 'dialog-message',
-        messageId: null,
-        text: inputElement.value,
-        takerId: interlocutorData.id,
-        dialogId: dialogId,
-        sendDate: new Date(),
-        // Если сломается, раскомментируй нижнюю строку ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-         senderId: userId,
-        };
+        if (chatType == 'dialog') {
+
+            body = {
+                type: 'dialog-message',
+                messageId: null,
+                text: inputElement.value,
+                takerId: interlocutorData.id,
+                chatId: chatId,
+                sendDate: new Date(),
+                senderId: userId,
+                };
+
+        } else {
+
+            body = {
+                type: 'group-message',
+                messageId: null,
+                text: inputElement.value,
+                chatId: chatId,
+                sendDate: new Date(),
+                senderId: userId,
+                userName: 'Вы'
+            };
+        }
 
         body = addMessageToDOM(body, true);
 
@@ -193,15 +225,14 @@ function handleMessageSend() {
 function sendSocketMessage(body) {
 
     data = JSON.stringify(body);    
-
     socket.send(data);
 }
 
 // Запрос на получение истории сообщений
-function fetchDialogHistory(dialogId) {
+function fetchChatHistory(chatId) {
     body = {
-        type: 'dialog-history',
-        dialogId: dialogId,
+        type: 'chat-history',
+        chatId: chatId,
     };
 
     data = JSON.stringify(body);
@@ -212,10 +243,9 @@ function fetchDialogHistory(dialogId) {
 
 
 // Получить информацию о собеседнике
-async function getInterlocutorInfo(dialogId, callback) {
-
+async function getInterlocutorInfo(chatId, callback) {
     try {
-        const response = await fetch(`/chats/sendinterlocutorinfo/${dialogId}`);
+        const response = await fetch(`/chats/sendinterlocutorinfo/${chatId}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -253,7 +283,7 @@ function handleSocketMessage(data) {
             addMessageToDOM(data, false);
             break;
         // Обработка случая, когда получена история сообщений
-        case 'dialog-history':
+        case 'chat-history':
             let messageHistory = data.messages;
             messageHistory.forEach(message => {
                 addMessageToDOM(message, message.senderId == userId);
@@ -296,6 +326,9 @@ function handleSocketMessage(data) {
             messageTimeP.innerHTML = hours + ':' + minutes;
 
             break;
+        // Случай, когда было получено групповое сообщение    
+        case 'group-message':
+            addMessageToDOM(data, false);
     }
 }
 
@@ -327,7 +360,7 @@ function addMessageToDOM(data, isOutGoing) {
         replyIndicatorDiv.classList.add('reply-indicator');
         const replyAuthorSpan = document.createElement('span');
         replyAuthorSpan.classList.add('reply-author');
-        replyAuthorSpan.textContent = isOutGoing ? 'Вы' : interlocutorData.nick; // Тут указываем имя пользователя или другую информацию
+        replyAuthorSpan.textContent = data.userName; // Тут указываем имя пользователя или другую информацию
         const blockquote = document.createElement('blockquote');
         blockquote.textContent = messageData.get(originalMessageId).text; // Тут указываем цитируемый текст
 
@@ -378,6 +411,14 @@ function addMessageToDOM(data, isOutGoing) {
         originalMessageId = null;
 
     } else {
+        // Добавляем автора сообщения, если это групповое сообщение
+        if (data.type == 'group-message' || typeof data.type == 'undefined') {
+
+            const authorP = document.createElement('p');
+            authorP.classList.add('author-name');
+            authorP.textContent = isOutGoing ? 'Вы' : data.userName;
+            messageWrapperDiv.appendChild(authorP);
+        }
         // Создание элемента p для текста обычного сообщения
         const messageP = document.createElement('p');
         messageP.classList.add('message-text');
@@ -400,6 +441,7 @@ function addMessageToDOM(data, isOutGoing) {
         messageWrapperDiv.id = `message-${data.messageId}`;
         messageWrapperDiv.dataset.id = data.messageId;
     }
+
 
     // Добавление всего сообщения или ответа в контейнер чата
     messagesElement.appendChild(messageWrapperDiv);
@@ -424,7 +466,7 @@ function createContextMenu(messageId) {
     contextMenu.classList.add('context-menu');
 
     if (messageData.get(messageId).senderId == userId) {
-      contextMenu.appendChild(createActionButton('delete', () => deleteMessage(messageId)));
+      contextMenu.appendChild(createActionButton('delete', () => deleteMessage(messageId, segments[2])));
       contextMenu.appendChild(createActionButton('edit', () => editMessage(messageId)));
     }
   
@@ -484,14 +526,17 @@ function createActionButton(text, action) {
 
 
 // Функция удаления сообщения
-function deleteMessage(messageId) {
+function deleteMessage(messageId, chatType) {
 
     body = {
         type: 'delete-message',
-        interlocutorId: interlocutorData.id,
         messageId: messageId,
-        dialogId: dialogId,
+        chatId: chatId,
+        chatType: chatType,
+        senderId: userId,
     };
+
+    if (chatType == 'dialog') body.interlocutorId = interlocutorData.id;
 
     sendSocketMessage(body);
 
@@ -580,3 +625,145 @@ function replyToMessage(messageId) {
     const inputField = document.querySelector('.chat-input');
     inputField.focus();
 }
+
+
+
+
+
+function addFriendToGroup(friendId) {
+    if (groupMembers.includes(friendId)) groupMembers.pop(friendId);
+
+    else groupMembers.push(friendId);
+}
+
+function displayFriendsList(friends) {
+    // Находим родительский контейнер для списка
+    const container = document.querySelector('.friends-list');
+    // Создаем элемент ul, который будет содержать список друзей
+    const ul = document.createElement('ul');
+    ul.className = 'friends-list';
+    
+    // Для каждого друга создаем элемент списка
+    friends.forEach(friend => {
+      const li = document.createElement('li');
+      li.className = 'friend-item';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = friend.fullName;
+      nameSpan.className = 'friend-name';
+      
+      li.appendChild(nameSpan);
+      
+      // Добавляем обработчик клика, чтобы добавлять друга в участники группы
+      li.addEventListener('click', () => {
+        addFriendToGroup(friend.tag);
+      });
+
+      // Добавляем элемент списка в ul
+      ul.appendChild(li);
+    });
+    
+    // Очищаем ранее добавленные друзей и добавляем новый список
+    container.innerHTML = '';
+    container.appendChild(ul);
+}
+
+function displayGroupName(groupName) {
+    const groupNameP = document.querySelector('.chat-header h1');
+    groupNameP.innerHTML = groupName;
+}
+
+async function getFriendsList() {
+    try {
+        const response = await fetch(`/friends/sendfriendslist`);
+        if (!response.ok) { // Проверка на успешный ответ от сервера
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        displayFriendsList(data);
+    } catch (error) {
+        console.error('Произошла ошибка:', error);
+    }
+}
+
+async function sendRequestToCreateGroup(groupName) {
+    body = {
+        groupName: groupName,
+        groupMembers: groupMembers,
+    };
+    try { const response = await fetch('/chats/creategroup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch');
+      }
+
+    } catch (error) {
+        console.error('Произошла ошибка:', error);
+        showFlashMessage('Error occurred', 'violet');
+      }
+}
+
+async function getGroupName() {
+    body = {
+        groupId: chatId,
+    };
+    try {
+        const response = await fetch(`/chats/sendgroupname`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application-json',
+            },
+            body: JSON.stringify(body),
+        });
+
+        const groupName = await response.json();
+        displayGroupName(groupName);
+    } catch (error) {
+        console.error('Произошла ошибка:', error);
+        showFlashMessage('Error occurred', 'violet');
+      }
+}
+
+
+if (path.includes(`groups`)) {
+    const createGroupButton = document.getElementById('create-group-button');
+    createGroupButton.addEventListener('click', function(event) {
+
+        event.preventDefault();
+        if (groupMembers.length < 2) {
+            showFlashMessage('Недостаточное колличество участников', 'red');
+        }
+        
+        const inputElement = document.getElementById('group-name');
+
+        if (inputElement.value != '') {
+            sendRequestToCreateGroup(inputElement.value);
+        }
+    });
+}
+
+
+
+ // flash-сообщение
+ function showFlashMessage(message, color) {
+    const flashMessage = document.createElement('div');
+    flashMessage.textContent = message;
+    flashMessage.style.backgroundColor = color;
+    flashMessage.style.position = 'fixed';
+    flashMessage.style.top = '10px';
+    flashMessage.style.left = '10px';
+    flashMessage.style.padding = '10px';
+    flashMessage.style.borderRadius = '5px';
+    document.body.appendChild(flashMessage);
+    
+    // Удалить сообщение через 3 секунды
+    setTimeout(() => {
+      flashMessage.remove();
+    }, 600);
+  }

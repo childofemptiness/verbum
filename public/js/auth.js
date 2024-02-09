@@ -52,7 +52,6 @@ const getFormData = (form) => {
       console.log(responseData.token);
       localStorage.setItem('userToken', responseData.token);
       if (status === 200) {
-        console.log(555);
         // Если статус 200, показываем сообщение об успешном входе
         window.location.href = '/main/home';
         showFlashMessage(message, 'green');
